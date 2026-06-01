@@ -1,0 +1,8 @@
+{
+  "url": "https://verifier-backend.eudiw.dev/wallet/request.jwt/53X4RqjcaxISSR-wOa2CpJWywNbhUvlk_fSq7cxvfNG86ntbwYzVU9qslCKUjhQrC6kq4vpDx_IuKYHw-L2ETA",
+  "http_status": 200,
+  "content_type": "",
+  "fetched_at": "2026-05-29T08:27:00Z",
+  "format": "jwt",
+  "sha256": "4bfb6059bd39fe502ef87d064dea821f2e4ecef4ede967790b53842d2602af28"
+}

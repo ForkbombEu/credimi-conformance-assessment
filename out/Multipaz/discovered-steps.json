@@ -1,0 +1,11 @@
+{
+  "credential_offer_steps": [
+    {
+      "pipeline_order": 1,
+      "step_id": "multipaz-pid-mdoc-eu-europa-ec-eudi-pid-1-0002",
+      "use": "credential-offer",
+      "credential_id": "forkbomb-bv-andrea/misc-issuer-integration-demo/multipaz-pid-mdoc-eu-europa-ec-eudi-pid-1"
+    }
+  ],
+  "presentation_request_steps": null
+}

@@ -1,0 +1,8 @@
+{
+  "url": "https://issuer.eudiw.dev/.well-known/openid-credential-issuer",
+  "http_status": 200,
+  "content_type": "application/json",
+  "fetched_at": "2026-05-29T08:27:00Z",
+  "format": "json",
+  "sha256": "e85e8759dae2d6cfaa94e1b45307b84f390bccd17d99af9042320561b6f36c9a"
+}

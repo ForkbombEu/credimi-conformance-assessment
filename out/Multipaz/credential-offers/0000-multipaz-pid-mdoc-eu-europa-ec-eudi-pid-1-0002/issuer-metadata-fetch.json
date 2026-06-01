@@ -1,0 +1,8 @@
+{
+  "url": "https://issuer.multipaz.org/issuer/.well-known/openid-credential-issuer",
+  "http_status": 200,
+  "content_type": "application/json",
+  "fetched_at": "2026-05-28T09:48:42Z",
+  "format": "json",
+  "sha256": "282d31a8e8505696d4e6e01296ed3574760d8e611722382e9fb6818eb7099108"
+}

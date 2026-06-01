@@ -1,0 +1,11 @@
+{
+  "status": "ok",
+  "started_at": "2026-05-28T09:47:50Z",
+  "finished_at": "2026-05-28T09:47:50Z",
+  "credential_offer_count": 0,
+  "credential_offer_success_count": 0,
+  "presentation_request_count": 0,
+  "presentation_request_success_count": 0,
+  "warnings": null,
+  "errors": null
+}

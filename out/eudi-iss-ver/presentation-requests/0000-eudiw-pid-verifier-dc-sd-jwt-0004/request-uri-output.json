@@ -1,0 +1,224 @@
+{
+  "format": "jwt",
+  "header": {
+    "x5c": [
+      "MIIDDDCCArKgAwIBAgIUG8SguUrbgpJUvd6v+07Sp8utLfQwCgYIKoZIzj0EAwIwXDEeMBwGA1UEAwwVUElEIElzc3VlciBDQSAtIFVUIDAyMS0wKwYDVQQKDCRFVURJIFdhbGxldCBSZWZlcmVuY2UgSW1wbGVtZW50YXRpb24xCzAJBgNVBAYTAlVUMB4XDTI1MDQxMDA2NDU1OFoXDTI3MDQxMDA2NDU1N1owVzEdMBsGA1UEAwwURVVESSBSZW1vdGUgVmVyaWZpZXIxCjAIBgNVBAUTATExHTAbBgNVBAoMFEVVREkgUmVtb3RlIFZlcmlmaWVyMQswCQYDVQQGEwJVVDBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABOciV42mIT8nQMAN8kW9CHNUTYwkieem5hl1QsLf62kEbbZh6wul5iL28g/A3ZqcTX9XoLnw/nvJ8/HRp3+95eKjggFVMIIBUTAMBgNVHRMBAf8EAjAAMB8GA1UdIwQYMBaAFGLHlEcovQ+iFiCnmsJJlETxAdPHMDkGA1UdEQQyMDCBEm5vLXJlcGx5QGV1ZGl3LmRldoIadmVyaWZpZXItYmFja2VuZC5ldWRpdy5kZXYwEgYDVR0lBAswCQYHKIGMXQUBBjBDBgNVHR8EPDA6MDigNqA0hjJodHRwczovL3ByZXByb2QucGtpLmV1ZGl3LmRldi9jcmwvcGlkX0NBX1VUXzAyLmNybDAdBgNVHQ4EFgQUgAh9KsoYXYK8jndUbFQEtfDsHjYwDgYDVR0PAQH/BAQDAgeAMF0GA1UdEgRWMFSGUmh0dHBzOi8vZ2l0aHViLmNvbS9ldS1kaWdpdGFsLWlkZW50aXR5LXdhbGxldC9hcmNoaXRlY3R1cmUtYW5kLXJlZmVyZW5jZS1mcmFtZXdvcmswCgYIKoZIzj0EAwIDSAAwRQIgDFCgyEjGnJS25n/FfdP7HX0elz7C2q4uUQ/7Zcrl0QYCIQC/rrJpQ5sF1O4aiHejIPPLuO3JjdrLJPZSA+FQH+eIrA=="
+    ],
+    "typ": "oauth-authz-req+jwt",
+    "alg": "ES256"
+  },
+  "payload": {
+    "response_uri": "https://verifier-backend.eudiw.dev/wallet/direct_post/53X4RqjcaxISSR-wOa2CpJWywNbhUvlk_fSq7cxvfNG86ntbwYzVU9qslCKUjhQrC6kq4vpDx_IuKYHw-L2ETA",
+    "aud": "https://self-issued.me/v2",
+    "response_type": "vp_token",
+    "state": "53X4RqjcaxISSR-wOa2CpJWywNbhUvlk_fSq7cxvfNG86ntbwYzVU9qslCKUjhQrC6kq4vpDx_IuKYHw-L2ETA",
+    "dcql_query": {
+      "credentials": [
+        {
+          "id": "query_0",
+          "format": "dc+sd-jwt",
+          "meta": {
+            "vct_values": [
+              "urn:eudi:pid:1"
+            ]
+          },
+          "claims": [
+            {
+              "path": [
+                "family_name"
+              ]
+            },
+            {
+              "path": [
+                "given_name"
+              ]
+            },
+            {
+              "path": [
+                "birthdate"
+              ]
+            },
+            {
+              "path": [
+                "birth_family_name"
+              ]
+            },
+            {
+              "path": [
+                "birth_given_name"
+              ]
+            },
+            {
+              "path": [
+                "place_of_birth",
+                "locality"
+              ]
+            },
+            {
+              "path": [
+                "address",
+                "formatted"
+              ]
+            },
+            {
+              "path": [
+                "address",
+                "country"
+              ]
+            },
+            {
+              "path": [
+                "address",
+                "region"
+              ]
+            },
+            {
+              "path": [
+                "address",
+                "locality"
+              ]
+            },
+            {
+              "path": [
+                "address",
+                "postal_code"
+              ]
+            },
+            {
+              "path": [
+                "address",
+                "street_address"
+              ]
+            },
+            {
+              "path": [
+                "address",
+                "house_number"
+              ]
+            },
+            {
+              "path": [
+                "sex"
+              ]
+            },
+            {
+              "path": [
+                "nationalities",
+                null
+              ]
+            },
+            {
+              "path": [
+                "date_of_issuance"
+              ]
+            },
+            {
+              "path": [
+                "date_of_expiry"
+              ]
+            },
+            {
+              "path": [
+                "issuing_authority"
+              ]
+            },
+            {
+              "path": [
+                "document_number"
+              ]
+            },
+            {
+              "path": [
+                "personal_administrative_number"
+              ]
+            },
+            {
+              "path": [
+                "issuing_country"
+              ]
+            },
+            {
+              "path": [
+                "issuing_jurisdiction"
+              ]
+            },
+            {
+              "path": [
+                "picture"
+              ]
+            },
+            {
+              "path": [
+                "email"
+              ]
+            },
+            {
+              "path": [
+                "phone_number"
+              ]
+            },
+            {
+              "path": [
+                "trust_anchor"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "iat": 1780043219,
+    "nonce": "5292a48f-81c5-44d1-bf07-64d37aacb248",
+    "client_id": "x509_hash:LTHlBmrN6Wc9oE3TxFZp47fET6iFBQIiwMJiu3BLcqw",
+    "client_metadata": {
+      "jwks": {
+        "keys": [
+          {
+            "kty": "EC",
+            "use": "enc",
+            "crv": "P-256",
+            "kid": "90ba83ae-ce6b-45cc-9bff-c71c17ab9bf2",
+            "x": "Gvi9jAT6zVP82Utz0FeZdNjAfKbeAlT-mgxCM4NpsDs",
+            "y": "4mUiTsgSCI3BG5UcHcCZ9eOO690e3Weso7yZgI66xtU",
+            "alg": "ECDH-ES"
+          }
+        ]
+      },
+      "vp_formats_supported": {
+        "dc+sd-jwt": {
+          "sd-jwt_alg_values": [
+            "ES256",
+            "ES384",
+            "ES512"
+          ],
+          "kb-jwt_alg_values": [
+            "ES256",
+            "ES384",
+            "ES512"
+          ]
+        },
+        "mso_mdoc": {
+          "issuerauth_alg_values": [
+            -7,
+            -35,
+            -36
+          ],
+          "deviceauth_alg_values": [
+            -7,
+            -35,
+            -36
+          ]
+        }
+      },
+      "encrypted_response_enc_values_supported": [
+        "A128GCM",
+        "A256GCM"
+      ]
+    },
+    "response_mode": "direct_post.jwt"
+  },
+  "post_strategy_selected": "empty",
+  "raw": "eyJ4NWMiOlsiTUlJREREQ0NBcktnQXdJQkFnSVVHOFNndVVyYmdwSlV2ZDZ2KzA3U3A4dXRMZlF3Q2dZSUtvWkl6ajBFQXdJd1hERWVNQndHQTFVRUF3d1ZVRWxFSUVsemMzVmxjaUJEUVNBdElGVlVJREF5TVMwd0t3WURWUVFLRENSRlZVUkpJRmRoYkd4bGRDQlNaV1psY21WdVkyVWdTVzF3YkdWdFpXNTBZWFJwYjI0eEN6QUpCZ05WQkFZVEFsVlVNQjRYRFRJMU1EUXhNREEyTkRVMU9Gb1hEVEkzTURReE1EQTJORFUxTjFvd1Z6RWRNQnNHQTFVRUF3d1VSVlZFU1NCU1pXMXZkR1VnVm1WeWFXWnBaWEl4Q2pBSUJnTlZCQVVUQVRFeEhUQWJCZ05WQkFvTUZFVlZSRWtnVW1WdGIzUmxJRlpsY21sbWFXVnlNUXN3Q1FZRFZRUUdFd0pWVkRCWk1CTUdCeXFHU000OUFnRUdDQ3FHU000OUF3RUhBMElBQk9jaVY0Mm1JVDhuUU1BTjhrVzlDSE5VVFl3a2llZW01aGwxUXNMZjYya0ViYlpoNnd1bDVpTDI4Zy9BM1pxY1RYOVhvTG53L252SjgvSFJwMys5NWVLamdnRlZNSUlCVVRBTUJnTlZIUk1CQWY4RUFqQUFNQjhHQTFVZEl3UVlNQmFBRkdMSGxFY292UStpRmlDbm1zSkpsRVR4QWRQSE1Ea0dBMVVkRVFReU1EQ0JFbTV2TFhKbGNHeDVRR1YxWkdsM0xtUmxkb0lhZG1WeWFXWnBaWEl0WW1GamEyVnVaQzVsZFdScGR5NWtaWFl3RWdZRFZSMGxCQXN3Q1FZSEtJR01YUVVCQmpCREJnTlZIUjhFUERBNk1EaWdOcUEwaGpKb2RIUndjem92TDNCeVpYQnliMlF1Y0d0cExtVjFaR2wzTG1SbGRpOWpjbXd2Y0dsa1gwTkJYMVZVWHpBeUxtTnliREFkQmdOVkhRNEVGZ1FVZ0FoOUtzb1lYWUs4am5kVWJGUUV0ZkRzSGpZd0RnWURWUjBQQVFIL0JBUURBZ2VBTUYwR0ExVWRFZ1JXTUZTR1VtaDBkSEJ6T2k4dloybDBhSFZpTG1OdmJTOWxkUzFrYVdkcGRHRnNMV2xrWlc1MGFYUjVMWGRoYkd4bGRDOWhjbU5vYVhSbFkzUjFjbVV0WVc1a0xYSmxabVZ5Wlc1alpTMW1jbUZ0WlhkdmNtc3dDZ1lJS29aSXpqMEVBd0lEU0FBd1JRSWdERkNneUVqR25KUzI1bi9GZmRQN0hYMGVsejdDMnE0dVVRLzdaY3JsMFFZQ0lRQy9yckpwUTVzRjFPNGFpSGVqSVBQTHVPM0pqZHJMSlBaU0ErRlFIK2VJckE9PSJdLCJ0eXAiOiJvYXV0aC1hdXRoei1yZXErand0IiwiYWxnIjoiRVMyNTYifQ.eyJyZXNwb25zZV91cmkiOiJodHRwczovL3ZlcmlmaWVyLWJhY2tlbmQuZXVkaXcuZGV2L3dhbGxldC9kaXJlY3RfcG9zdC81M1g0UnFqY2F4SVNTUi13T2EyQ3BKV3l3TmJoVXZsa19mU3E3Y3h2Zk5HODZudGJ3WXpWVTlxc2xDS1VqaFFyQzZrcTR2cER4X0l1S1lIdy1MMkVUQSIsImF1ZCI6Imh0dHBzOi8vc2VsZi1pc3N1ZWQubWUvdjIiLCJyZXNwb25zZV90eXBlIjoidnBfdG9rZW4iLCJzdGF0ZSI6IjUzWDRScWpjYXhJU1NSLXdPYTJDcEpXeXdOYmhVdmxrX2ZTcTdjeHZmTkc4Nm50YndZelZVOXFzbENLVWpoUXJDNmtxNHZwRHhfSXVLWUh3LUwyRVRBIiwiZGNxbF9xdWVyeSI6eyJjcmVkZW50aWFscyI6W3siaWQiOiJxdWVyeV8wIiwiZm9ybWF0IjoiZGMrc2Qtand0IiwibWV0YSI6eyJ2Y3RfdmFsdWVzIjpbInVybjpldWRpOnBpZDoxIl19LCJjbGFpbXMiOlt7InBhdGgiOlsiZmFtaWx5X25hbWUiXX0seyJwYXRoIjpbImdpdmVuX25hbWUiXX0seyJwYXRoIjpbImJpcnRoZGF0ZSJdfSx7InBhdGgiOlsiYmlydGhfZmFtaWx5X25hbWUiXX0seyJwYXRoIjpbImJpcnRoX2dpdmVuX25hbWUiXX0seyJwYXRoIjpbInBsYWNlX29mX2JpcnRoIiwibG9jYWxpdHkiXX0seyJwYXRoIjpbImFkZHJlc3MiLCJmb3JtYXR0ZWQiXX0seyJwYXRoIjpbImFkZHJlc3MiLCJjb3VudHJ5Il19LHsicGF0aCI6WyJhZGRyZXNzIiwicmVnaW9uIl19LHsicGF0aCI6WyJhZGRyZXNzIiwibG9jYWxpdHkiXX0seyJwYXRoIjpbImFkZHJlc3MiLCJwb3N0YWxfY29kZSJdfSx7InBhdGgiOlsiYWRkcmVzcyIsInN0cmVldF9hZGRyZXNzIl19LHsicGF0aCI6WyJhZGRyZXNzIiwiaG91c2VfbnVtYmVyIl19LHsicGF0aCI6WyJzZXgiXX0seyJwYXRoIjpbIm5hdGlvbmFsaXRpZXMiLG51bGxdfSx7InBhdGgiOlsiZGF0ZV9vZl9pc3N1YW5jZSJdfSx7InBhdGgiOlsiZGF0ZV9vZl9leHBpcnkiXX0seyJwYXRoIjpbImlzc3VpbmdfYXV0aG9yaXR5Il19LHsicGF0aCI6WyJkb2N1bWVudF9udW1iZXIiXX0seyJwYXRoIjpbInBlcnNvbmFsX2FkbWluaXN0cmF0aXZlX251bWJlciJdfSx7InBhdGgiOlsiaXNzdWluZ19jb3VudHJ5Il19LHsicGF0aCI6WyJpc3N1aW5nX2p1cmlzZGljdGlvbiJdfSx7InBhdGgiOlsicGljdHVyZSJdfSx7InBhdGgiOlsiZW1haWwiXX0seyJwYXRoIjpbInBob25lX251bWJlciJdfSx7InBhdGgiOlsidHJ1c3RfYW5jaG9yIl19XX1dfSwiaWF0IjoxNzgwMDQzMjE5LCJub25jZSI6IjUyOTJhNDhmLTgxYzUtNDRkMS1iZjA3LTY0ZDM3YWFjYjI0OCIsImNsaWVudF9pZCI6Ing1MDlfaGFzaDpMVEhsQm1yTjZXYzlvRTNUeEZacDQ3ZkVUNmlGQlFJaXdNSml1M0JMY3F3IiwiY2xpZW50X21ldGFkYXRhIjp7Imp3a3MiOnsia2V5cyI6W3sia3R5IjoiRUMiLCJ1c2UiOiJlbmMiLCJjcnYiOiJQLTI1NiIsImtpZCI6IjkwYmE4M2FlLWNlNmItNDVjYy05YmZmLWM3MWMxN2FiOWJmMiIsIngiOiJHdmk5akFUNnpWUDgyVXR6MEZlWmROakFmS2JlQWxULW1neENNNE5wc0RzIiwieSI6IjRtVWlUc2dTQ0kzQkc1VWNIY0NaOWVPTzY5MGUzV2Vzbzd5WmdJNjZ4dFUiLCJhbGciOiJFQ0RILUVTIn1dfSwidnBfZm9ybWF0c19zdXBwb3J0ZWQiOnsiZGMrc2Qtand0Ijp7InNkLWp3dF9hbGdfdmFsdWVzIjpbIkVTMjU2IiwiRVMzODQiLCJFUzUxMiJdLCJrYi1qd3RfYWxnX3ZhbHVlcyI6WyJFUzI1NiIsIkVTMzg0IiwiRVM1MTIiXX0sIm1zb19tZG9jIjp7Imlzc3VlcmF1dGhfYWxnX3ZhbHVlcyI6Wy03LC0zNSwtMzZdLCJkZXZpY2VhdXRoX2FsZ192YWx1ZXMiOlstNywtMzUsLTM2XX19LCJlbmNyeXB0ZWRfcmVzcG9uc2VfZW5jX3ZhbHVlc19zdXBwb3J0ZWQiOlsiQTEyOEdDTSIsIkEyNTZHQ00iXX0sInJlc3BvbnNlX21vZGUiOiJkaXJlY3RfcG9zdC5qd3QifQ.PUnY4as9Qnw5tAuNT0oxaXJDExmlfgxa8eGy5kPgfVpIpJrSd9GWI9c0ppTKp0b7LpRWZnXKugc7BtdFF06yWQ",
+  "request_uri_method": "post",
+  "signature_present": true,
+  "source_request_uri": "https://verifier-backend.eudiw.dev/wallet/request.jwt/53X4RqjcaxISSR-wOa2CpJWywNbhUvlk_fSq7cxvfNG86ntbwYzVU9qslCKUjhQrC6kq4vpDx_IuKYHw-L2ETA"
+}

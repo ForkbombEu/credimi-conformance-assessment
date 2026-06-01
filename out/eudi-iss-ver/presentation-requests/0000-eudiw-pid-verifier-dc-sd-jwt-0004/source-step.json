@@ -1,0 +1,6 @@
+{
+  "pipeline_order": 3,
+  "step_id": "eudiw-pid-verifier-dc-sd-jwt-0004",
+  "use": "use-case-verification-deeplink",
+  "use_case_id": "/forkbomb-bv-andrea/misc-verifiers-interop/eudiw-pid-verifier-dc-sd-jwt"
+}

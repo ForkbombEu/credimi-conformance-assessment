@@ -1,0 +1,11 @@
+{
+  "credential_offer_steps": [
+    {
+      "pipeline_order": 2,
+      "step_id": "talao-wt-vc-json-with-draft-13-0003",
+      "use": "credential-offer",
+      "credential_id": "forkbomb-bv-andrea/misc-issuer-integration-demo/talao-wt-vc-json-with-draft-13"
+    }
+  ],
+  "presentation_request_steps": null
+}

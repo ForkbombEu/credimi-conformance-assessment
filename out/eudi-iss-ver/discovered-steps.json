@@ -1,0 +1,18 @@
+{
+  "credential_offer_steps": [
+    {
+      "pipeline_order": 1,
+      "step_id": "eudiw-pid-pid-vc-sd-jwt-haip-vci-0002",
+      "use": "credential-offer",
+      "credential_id": "/forkbomb-bv-andrea/misc-issuer-integration-demo/eudiw-pid-pid-vc-sd-jwt-haip-vci"
+    }
+  ],
+  "presentation_request_steps": [
+    {
+      "pipeline_order": 3,
+      "step_id": "eudiw-pid-verifier-dc-sd-jwt-0004",
+      "use": "use-case-verification-deeplink",
+      "use_case_id": "/forkbomb-bv-andrea/misc-verifiers-interop/eudiw-pid-verifier-dc-sd-jwt"
+    }
+  ]
+}

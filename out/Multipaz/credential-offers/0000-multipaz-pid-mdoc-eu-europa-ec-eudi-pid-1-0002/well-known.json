@@ -1,0 +1,296 @@
+{
+  "authorization_servers": [
+    "https://issuer.multipaz.org/issuer"
+  ],
+  "batch_credential_issuance": {
+    "batch_size": 12
+  },
+  "credential_configurations_supported": {
+    "mDL": {
+      "credential_metadata": {
+        "display": [
+          {
+            "locale": "en-US",
+            "logo": {
+              "uri": "https://issuer.multipaz.org/issuer/card-mdl.png"
+            },
+            "name": "Driver license"
+          }
+        ]
+      },
+      "credential_signing_alg_values_supported": [
+        -9
+      ],
+      "cryptographic_binding_methods_supported": [
+        "cose_key"
+      ],
+      "doctype": "org.iso.18013.5.1.mDL",
+      "format": "mso_mdoc",
+      "proof_types_supported": {
+        "attestation": {
+          "proof_signing_alg_values_supported": [
+            "ES256"
+          ]
+        }
+      },
+      "scope": "mDL"
+    },
+    "mDoc-AgeVerification": {
+      "credential_metadata": {
+        "display": [
+          {
+            "locale": "en-US",
+            "logo": {
+              "uri": "https://issuer.multipaz.org/issuer/card-age-verification.png"
+            },
+            "name": "Age verification"
+          }
+        ]
+      },
+      "credential_signing_alg_values_supported": [
+        -9
+      ],
+      "cryptographic_binding_methods_supported": [
+        "cose_key"
+      ],
+      "doctype": "eu.europa.ec.av.1",
+      "format": "mso_mdoc",
+      "proof_types_supported": {
+        "attestation": {
+          "proof_signing_alg_values_supported": [
+            "ES256"
+          ]
+        }
+      },
+      "scope": "core"
+    },
+    "payment_sca_mdoc": {
+      "credential_metadata": {
+        "display": [
+          {
+            "locale": "en-US",
+            "logo": {
+              "uri": "https://issuer.multipaz.org/issuer/card_payment_sca_v2.png"
+            },
+            "name": "Payment card"
+          }
+        ]
+      },
+      "credential_signing_alg_values_supported": [
+        -9
+      ],
+      "cryptographic_binding_methods_supported": [
+        "cose_key"
+      ],
+      "doctype": "org.multipaz.payment.sca.1",
+      "format": "mso_mdoc",
+      "proof_types_supported": {
+        "attestation": {
+          "proof_signing_alg_values_supported": [
+            "ES256"
+          ]
+        },
+        "jwt": {
+          "proof_signing_alg_values_supported": [
+            "ES256"
+          ]
+        }
+      },
+      "scope": "payment"
+    },
+    "payment_sca_sd_jwt": {
+      "credential_metadata": {
+        "display": [
+          {
+            "locale": "en-US",
+            "logo": {
+              "uri": "https://issuer.multipaz.org/issuer/card_payment_sca_v2.png"
+            },
+            "name": "Payment card"
+          }
+        ]
+      },
+      "credential_signing_alg_values_supported": [
+        "ES256"
+      ],
+      "cryptographic_binding_methods_supported": [
+        "jwk"
+      ],
+      "format": "dc+sd-jwt",
+      "proof_types_supported": {
+        "attestation": {
+          "proof_signing_alg_values_supported": [
+            "ES256"
+          ]
+        }
+      },
+      "scope": "payment",
+      "vct": "urn:emvco:dpc:card:1"
+    },
+    "pid_mdoc": {
+      "credential_metadata": {
+        "display": [
+          {
+            "locale": "en-US",
+            "logo": {
+              "uri": "https://issuer.multipaz.org/issuer/card-pid.png"
+            },
+            "name": "Personal ID"
+          }
+        ]
+      },
+      "credential_signing_alg_values_supported": [
+        -9
+      ],
+      "cryptographic_binding_methods_supported": [
+        "cose_key"
+      ],
+      "doctype": "eu.europa.ec.eudi.pid.1",
+      "format": "mso_mdoc",
+      "proof_types_supported": {
+        "android_keystore_attestation": {
+          "key_attestations_required": {
+            "key_mint_security_level": "TrustedEnvironment"
+          },
+          "proof_signing_alg_values_supported": [
+            "ES256"
+          ]
+        },
+        "attestation": {
+          "proof_signing_alg_values_supported": [
+            "ES256"
+          ]
+        }
+      },
+      "scope": "core"
+    },
+    "pid_sd_jwt": {
+      "credential_metadata": {
+        "display": [
+          {
+            "locale": "en-US",
+            "logo": {
+              "uri": "https://issuer.multipaz.org/issuer/card-pid.png"
+            },
+            "name": "Personal ID"
+          }
+        ]
+      },
+      "credential_signing_alg_values_supported": [
+        "ES256"
+      ],
+      "cryptographic_binding_methods_supported": [
+        "jwk"
+      ],
+      "format": "dc+sd-jwt",
+      "proof_types_supported": {
+        "attestation": {
+          "proof_signing_alg_values_supported": [
+            "ES256"
+          ]
+        }
+      },
+      "scope": "core",
+      "vct": "urn:eudi:pid:1"
+    },
+    "utopia_movie_ticket": {
+      "credential_metadata": {
+        "display": [
+          {
+            "locale": "en-US",
+            "logo": {
+              "uri": "https://issuer.multipaz.org/issuer/movie_ticket.png"
+            },
+            "name": "Movie ticket"
+          }
+        ]
+      },
+      "credential_signing_alg_values_supported": [
+        "ES256"
+      ],
+      "format": "dc+sd-jwt",
+      "scope": "movie",
+      "vct": "https://utopia.example.com/vct/movieticket"
+    },
+    "utopia_naturalization": {
+      "credential_metadata": {
+        "display": [
+          {
+            "locale": "en-US",
+            "logo": {
+              "uri": "https://issuer.multipaz.org/issuer/naturalization.png"
+            },
+            "name": "Naturalization certificate"
+          }
+        ]
+      },
+      "credential_signing_alg_values_supported": [
+        "ES256"
+      ],
+      "cryptographic_binding_methods_supported": [
+        "jwk"
+      ],
+      "format": "dc+sd-jwt",
+      "proof_types_supported": {
+        "attestation": {
+          "proof_signing_alg_values_supported": [
+            "ES256"
+          ]
+        },
+        "jwt": {
+          "proof_signing_alg_values_supported": [
+            "ES256"
+          ]
+        }
+      },
+      "scope": "naturalization",
+      "vct": "http://utopia.example.com/vct/naturalization"
+    },
+    "utopia_wholesale": {
+      "credential_metadata": {
+        "display": [
+          {
+            "locale": "en-US",
+            "logo": {
+              "uri": "https://issuer.multipaz.org/issuer/card_utopia_wholesale.png"
+            },
+            "name": "Wholesale card"
+          }
+        ]
+      },
+      "credential_signing_alg_values_supported": [
+        -9
+      ],
+      "cryptographic_binding_methods_supported": [
+        "cose_key"
+      ],
+      "doctype": "org.multipaz.loyalty.1",
+      "format": "mso_mdoc",
+      "proof_types_supported": {
+        "attestation": {
+          "proof_signing_alg_values_supported": [
+            "ES256"
+          ]
+        },
+        "jwt": {
+          "proof_signing_alg_values_supported": [
+            "ES256"
+          ]
+        }
+      },
+      "scope": "wholesale"
+    }
+  },
+  "credential_endpoint": "https://issuer.multipaz.org/issuer/credential",
+  "credential_issuer": "https://issuer.multipaz.org/issuer",
+  "display": [
+    {
+      "locale": "en-US",
+      "logo": {
+        "uri": "https://issuer.multipaz.org/issuer/logo.png"
+      },
+      "name": "Multipaz Sample Issuer"
+    }
+  ],
+  "nonce_endpoint": "https://issuer.multipaz.org/issuer/nonce"
+}

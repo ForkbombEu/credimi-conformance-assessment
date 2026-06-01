@@ -1,0 +1,11 @@
+{
+  "credential_offer_steps": [
+    {
+      "pipeline_order": 1,
+      "step_id": "eudiw-pid-sd-jwt-vc-issuer-backend-0002",
+      "use": "credential-offer",
+      "credential_id": "forkbomb-bv-andrea/misc-issuer-integration-demo/eudiw-pid-sd-jwt-vc-issuer-backend"
+    }
+  ],
+  "presentation_request_steps": null
+}
