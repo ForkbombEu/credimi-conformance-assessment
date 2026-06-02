@@ -14,15 +14,11 @@ import (
 func Build(f fixture.Fixture) (AssessmentFacts, error) {
 	af := AssessmentFacts{}
 	af.Fixture.Name, af.Fixture.Slug = f.Name, f.Slug
-	in := filepath.Join(f.Dir, "input.json")
-	out := filepath.Join(f.Dir, "output.json")
-	if b, err := os.ReadFile(in); err == nil {
-		af.Workflow.TemporalInputPresent = true
-		af.Workflow.Name = stringValue(parseJSON(b), "name", "workflow_name")
+	if b, err := os.ReadFile(filepath.Join(f.Dir, "input.json")); err == nil {
+		applyTemporalInput(&af, b)
 	}
-	if b, err := os.ReadFile(out); err == nil {
-		af.Workflow.TemporalOutputPresent = true
-		extractOutputFacts(&af, b)
+	if b, err := os.ReadFile(filepath.Join(f.Dir, "output.json")); err == nil {
+		applyTemporalOutput(&af, b)
 	}
 	if _, err := os.Stat(filepath.Join(f.ExtractedDir, "discovered-steps.json")); err == nil {
 		af.Evidence.StepArtifactsPresent = true
@@ -45,13 +41,87 @@ func Build(f fixture.Fixture) (AssessmentFacts, error) {
 		}
 		if strings.HasSuffix(base, ".json") {
 			if b, e := os.ReadFile(path); e == nil {
-				h := sha256.Sum256(b)
-				_ = hex.EncodeToString(h[:])
-				af.Evidence.ArtifactsHashed = true
+				markHashed(&af, b)
 			}
 		}
 		return nil
 	})
+	finalize(&af)
+	return af, nil
+}
+
+func BuildInline(name string, temporalInput, temporalOutput, pipelineInput json.RawMessage) (AssessmentFacts, error) {
+	if name == "" {
+		name = "inline-assessment"
+	}
+	af := AssessmentFacts{}
+	af.Fixture.Name, af.Fixture.Slug = name, fixture.Slug(name)
+	if hasJSON(temporalInput) {
+		applyTemporalInput(&af, temporalInput)
+	}
+	if hasJSON(temporalOutput) {
+		applyTemporalOutput(&af, temporalOutput)
+	}
+	if hasJSON(pipelineInput) {
+		if err := applyPipelineInput(&af, pipelineInput); err != nil {
+			return AssessmentFacts{}, err
+		}
+		markHashed(&af, pipelineInput)
+	}
+	finalize(&af)
+	return af, nil
+}
+
+func applyTemporalInput(af *AssessmentFacts, b []byte) {
+	af.Workflow.TemporalInputPresent = true
+	af.Workflow.Name = stringValue(parseJSON(b), "name", "workflow_name")
+}
+func applyTemporalOutput(af *AssessmentFacts, b []byte) {
+	af.Workflow.TemporalOutputPresent = true
+	extractOutputFacts(af, b)
+}
+func applyPipelineInput(af *AssessmentFacts, b []byte) error {
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return err
+	}
+	if hasJSON(m["discovered_steps"]) {
+		af.Evidence.StepArtifactsPresent = true
+	}
+	if hasJSON(m["extraction_summary"]) {
+		af.Evidence.ExtractionSummaryPresent = true
+	}
+	for _, raw := range rawArray(m, "credential_offers") {
+		af.CredentialOffers = append(af.CredentialOffers, readOfferBytes(raw))
+	}
+	for _, key := range []string{"well_known", "issuer_metadata"} {
+		for _, raw := range rawArray(m, key) {
+			mergeIssuer(af, readWellKnownBytes(raw))
+		}
+	}
+	for _, key := range []string{"presentation_requests", "request_uri_outputs"} {
+		for _, raw := range rawArray(m, key) {
+			af.Presentations = append(af.Presentations, readPresentationBytes(raw))
+		}
+	}
+	return nil
+}
+func rawArray(m map[string]json.RawMessage, key string) []json.RawMessage {
+	raw := m[key]
+	if !hasJSON(raw) {
+		return nil
+	}
+	var arr []json.RawMessage
+	if err := json.Unmarshal(raw, &arr); err == nil {
+		return arr
+	}
+	return []json.RawMessage{raw}
+}
+func hasJSON(b []byte) bool {
+	s := strings.TrimSpace(string(b))
+	return s != "" && s != "null"
+}
+func finalize(af *AssessmentFacts) {
 	if len(af.CredentialOffers) > 0 {
 		af.Wallet.IssuanceFlowCompleted = af.Workflow.TemporalOutputPresent && af.Wallet.NoVisibleError
 	}
@@ -59,9 +129,12 @@ func Build(f fixture.Fixture) (AssessmentFacts, error) {
 		af.Wallet.PresentationFlowCompleted = af.Workflow.TemporalOutputPresent && af.Wallet.NoVisibleError
 		af.Wallet.PresentationShareCompleted = af.Wallet.PresentationFlowCompleted
 	}
-	return af, nil
 }
-
+func markHashed(af *AssessmentFacts, b []byte) {
+	h := sha256.Sum256(b)
+	_ = hex.EncodeToString(h[:])
+	af.Evidence.ArtifactsHashed = true
+}
 func parseJSON(b []byte) any     { var v any; _ = json.Unmarshal(b, &v); return v }
 func asMap(v any) map[string]any { m, _ := v.(map[string]any); return m }
 func stringValue(v any, keys ...string) string {
@@ -101,8 +174,8 @@ func findJSONString(s, k string) string {
 	}
 	return rest[:e]
 }
-func readOffer(path string) CredentialOfferFacts {
-	b, _ := os.ReadFile(path)
+func readOffer(path string) CredentialOfferFacts { b, _ := os.ReadFile(path); return readOfferBytes(b) }
+func readOfferBytes(b []byte) CredentialOfferFacts {
 	m := asMap(parseJSON(b))
 	co := CredentialOfferFacts{Exists: true}
 	co.IssuerURL = stringValue(m, "credential_issuer")
@@ -117,8 +190,8 @@ func readOffer(path string) CredentialOfferFacts {
 	}
 	return co
 }
-func readWellKnown(path string) IssuerFacts {
-	b, _ := os.ReadFile(path)
+func readWellKnown(path string) IssuerFacts { b, _ := os.ReadFile(path); return readWellKnownBytes(b) }
+func readWellKnownBytes(b []byte) IssuerFacts {
 	s := string(b)
 	is := IssuerFacts{MetadataFetched: true, MetadataFormat: "JSON"}
 	if strings.Count(s, ".") >= 2 && !strings.HasPrefix(strings.TrimSpace(s), "{") {
@@ -158,6 +231,9 @@ func mergeIssuer(af *AssessmentFacts, is IssuerFacts) {
 }
 func readPresentation(path string) PresentationFacts {
 	b, _ := os.ReadFile(path)
+	return readPresentationBytes(b)
+}
+func readPresentationBytes(b []byte) PresentationFacts {
 	s := string(b)
 	p := PresentationFacts{Exists: true, RequestURIFetched: true}
 	p.JWTSigned = strings.Contains(s, "\"alg\"")
