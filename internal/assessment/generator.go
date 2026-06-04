@@ -12,6 +12,7 @@ import (
 	"credimi-conformance-assessment/internal/report"
 	"credimi-conformance-assessment/internal/rules"
 	"credimi-conformance-assessment/internal/sot"
+	sourceoftruth "credimi-conformance-assessment/source-of-truth"
 )
 
 type Options struct {
@@ -19,18 +20,18 @@ type Options struct {
 	TemporalData   string
 	OutDir         string
 	Fixture        string
-	TemporalInput  json.RawMessage
-	TemporalOutput json.RawMessage
 	PipelineInput  json.RawMessage
+	PipelineOutput json.RawMessage
+	Evidence       json.RawMessage
 	FixturesDir    string
 	ExtractedDir   string
 }
 
 type Request struct {
 	Fixture        string          `json:"fixture"`
-	TemporalInput  json.RawMessage `json:"temporal_input"`
-	TemporalOutput json.RawMessage `json:"temporal_output"`
 	PipelineInput  json.RawMessage `json:"pipeline_input"`
+	PipelineOutput json.RawMessage `json:"pipeline_output"`
+	Evidence       json.RawMessage `json:"evidence"`
 }
 
 type Report struct {
@@ -59,12 +60,17 @@ func LoadRequest(path string) (Request, error) {
 
 func Generate(opts Options) (Result, error) {
 	opts = withDefaults(opts)
-	src, err := sot.Load(opts.SourceDir)
+	src, err := loadSource(opts.SourceDir)
 	if err != nil {
 		return Result{}, err
 	}
 	if hasInlineInput(opts) {
-		af, err := facts.BuildInline(opts.Fixture, opts.TemporalInput, opts.TemporalOutput, opts.PipelineInput)
+		af, err := facts.BuildInline(
+			opts.Fixture,
+			opts.PipelineInput,
+			opts.PipelineOutput,
+			opts.Evidence,
+		)
 		if err != nil {
 			return Result{}, err
 		}
@@ -83,6 +89,13 @@ func Generate(opts Options) (Result, error) {
 		afs = append(afs, af)
 	}
 	return renderReports(opts, src, afs)
+}
+
+func loadSource(sourceDir string) (*sot.Source, error) {
+	if sourceDir != "" {
+		return sot.Load(sourceDir)
+	}
+	return sot.LoadFS(sourceoftruth.FS)
 }
 
 func renderReports(opts Options, src *sot.Source, afs []facts.AssessmentFacts) (Result, error) {
@@ -112,9 +125,6 @@ func renderReports(opts Options, src *sot.Source, afs []facts.AssessmentFacts) (
 }
 
 func withDefaults(opts Options) Options {
-	if opts.SourceDir == "" {
-		opts.SourceDir = "./source-of-truth"
-	}
 	if opts.FixturesDir == "" {
 		opts.FixturesDir = "./fixtures"
 	}
@@ -127,17 +137,19 @@ func ApplyRequest(opts Options, req Request) Options {
 	if req.Fixture != "" {
 		opts.Fixture = req.Fixture
 	}
-	if len(req.TemporalInput) > 0 {
-		opts.TemporalInput = req.TemporalInput
-	}
-	if len(req.TemporalOutput) > 0 {
-		opts.TemporalOutput = req.TemporalOutput
-	}
 	if len(req.PipelineInput) > 0 {
 		opts.PipelineInput = req.PipelineInput
+	}
+	if len(req.PipelineOutput) > 0 {
+		opts.PipelineOutput = req.PipelineOutput
+	}
+	if len(req.Evidence) > 0 {
+		opts.Evidence = req.Evidence
 	}
 	return opts
 }
 func hasInlineInput(opts Options) bool {
-	return len(opts.TemporalInput) > 0 || len(opts.TemporalOutput) > 0 || len(opts.PipelineInput) > 0
+	return len(opts.PipelineInput) > 0 ||
+		len(opts.PipelineOutput) > 0 ||
+		len(opts.Evidence) > 0
 }

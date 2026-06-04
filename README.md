@@ -1,6 +1,6 @@
 # Credimi Conformance Assessment Generator
 
-This repository contains a thin, deterministic Go CLI and REST wrapper that generates Credimi
+This repository contains a thin, deterministic Go library, CLI, and REST wrapper that generates Credimi
 `conformance-assessment-<fixture-slug>.md` reports from Temporal evidence,
 pipeline artifacts, and the source-of-truth package.
 
@@ -11,12 +11,16 @@ The implementation follows the handoff principle:
 
 ## Configuration
 
-Runtime defaults live in `.env`:
+Runtime defaults live in `.env`. Start from the checked-in template:
+
+```bash
+cp .env.example .env
+```
 
 ```dotenv
-# Path to the Credimi source-of-truth directory.
-# The default points at this repository's checked-in source-of-truth package.
-SOURCE_DIR=./source-of-truth
+# Optional source-of-truth directory used by the CLI and REST API.
+# The checked-in template leaves this empty, and the runtime default is ./source-of-truth.
+SOURCE_DIR=
 
 # Optional path to a JSON request file used by the CLI when --input-json is not set.
 # Leave empty when Temporal data is supplied directly by CLI JSON or REST request body.
@@ -31,6 +35,28 @@ OUT_DIR=
 API_PORT=8080
 ```
 
+The Go library can use the embedded source-of-truth files when `ReportOptions.SourceDir`
+is empty. The CLI and REST API load `.env` and default `SOURCE_DIR` to
+`./source-of-truth`, so local command-line runs use the checked-in taxonomy files
+unless you override the path.
+
+## Taskfile
+
+The repository automation is defined in `Taskfile.yml`; use these commands for
+local validation and CI-equivalent checks:
+
+```bash
+task test
+task lint
+task build
+```
+
+Formatting is also exposed through the Taskfile:
+
+```bash
+task fmt
+```
+
 ## Input JSON
 
 The CLI and REST API accept the same JSON shape:
@@ -38,59 +64,114 @@ The CLI and REST API accept the same JSON shape:
 ```json
 {
   "fixture": "EUDI-iss-ver",
-  "temporal_input": {
+  "pipeline_input": {
     "name": "EUDI issuer verification"
   },
-  "temporal_output": {
+  "pipeline_output": {
     "workflow_id": "example-workflow-id",
     "run_id": "example-run-id"
   },
-  "pipeline_input": {
-    "discovered_steps": {},
-    "extraction_summary": {},
+  "evidence": {
     "credential_offers": [
       {
-        "credential_issuer": "https://issuer.example",
-        "credential_configuration_ids": ["pid_sd_jwt"],
-        "grants": {
-          "urn:ietf:params:oauth:grant-type:pre-authorized_code": {}
+        "step_id": "credential-step",
+        "credential_id": "tenant/credential",
+        "credential_offer": {
+          "credential_issuer": "https://issuer.example",
+          "credential_configuration_ids": ["pid_sd_jwt"],
+          "grants": {
+            "urn:ietf:params:oauth:grant-type:pre-authorized_code": {}
+          }
         }
       }
     ],
-    "well_known": [
+    "credential_well_knowns": [
       {
-        "credential_endpoint": "https://issuer.example/credential",
-        "credential_configurations_supported": {
-          "pid_sd_jwt": {
-            "format": "vc+sd-jwt",
-            "proof_types_supported": {
-              "jwt": {
-                "proof_signing_alg_values_supported": ["ES256"]
+        "step_id": "credential-step",
+        "credential_id": "tenant/credential",
+        "well_known": {
+          "credential_endpoint": "https://issuer.example/credential",
+          "credential_configurations_supported": {
+            "pid_sd_jwt": {
+              "format": "vc+sd-jwt",
+              "proof_types_supported": {
+                "jwt": {
+                  "proof_signing_alg_values_supported": ["ES256"]
+                }
               }
             }
           }
         }
       }
     ],
-    "presentation_requests": []
+    "presentation_results": []
   }
 }
 ```
 
-`pipeline_input` is intentionally structured by artifact type instead of mirroring a full directory tree. That shape is practical for REST payloads and keeps the extraction logic deterministic. A single huge opaque pipeline JSON object would work poorly for validation, streaming, provenance, and future partial re-processing; if payloads become large, prefer storing artifacts externally and sending references or a manifest.
+`pipeline_input` and `pipeline_output` are the Credimi pipeline request and execution result. `evidence` is the normalized conformance evidence object produced by Credimi pipeline evidence extraction. It carries the resolved credential offers, issuer metadata, and presentation-request results needed to produce a meaningful report.
+
+## Library
+
+Use `pkg/conformance` when another Go program needs to produce the report directly:
+
+```go
+package example
+
+import (
+	"encoding/json"
+
+	"credimi-conformance-assessment/pkg/conformance"
+)
+
+func GenerateReport() (conformance.ReportResult, error) {
+	return conformance.Generate(
+		conformance.ReportInput{
+			Fixture:        "EUDI-iss-ver",
+			PipelineInput:  json.RawMessage(`{"name":"EUDI issuer verification"}`),
+			PipelineOutput: json.RawMessage(`{"workflow_id":"wf","run_id":"run"}`),
+			Evidence: json.RawMessage(`{
+				"credential_offers": [],
+				"credential_well_knowns": [],
+				"presentation_results": []
+			}`),
+		},
+		conformance.ReportOptions{},
+	)
+}
+```
+
+The library only generates reports. A caller that runs inside Credimi or any workflow runtime should wrap `conformance.Generate` in its own integration code and pass the resulting `ReportResult` through its own output envelope.
+
+When `ReportOptions.SourceDir` is empty, the library reads the source-of-truth files embedded in this module. Set `SourceDir` only when you intentionally want to override the bundled files with an external source package.
+
+`ReportInput` separates pipeline data from conformance evidence:
+
+- `pipeline_input`: Credimi pipeline request/workflow input.
+- `pipeline_output`: Credimi pipeline execution result/workflow output.
+- `evidence`: normalized extracted evidence with `credential_offers`, `credential_well_knowns`, and `presentation_results`, matching the evidence structure produced by Credimi pipeline evidence extraction.
 
 ## CLI Usage
+
+The repository exposes one CLI with subcommands:
+
+```bash
+go run . help
+```
+
+The old `./cmd/credimi-api` and `./cmd/credimi-assess` entrypoints are no longer
+present on this branch. Use the root command with `api` or `assess` instead.
 
 Generate from an input JSON file. With the default empty `OUT_DIR`, Markdown is written to stdout:
 
 ```bash
-go run ./cmd/credimi-assess --input-json ./assessment-input.json
+go run . assess --input-json ./assessment-input.json
 ```
 
 If `TEMPORAL_DATA` is set in `.env`, the CLI can use it without `--input-json`:
 
 ```bash
-go run ./cmd/credimi-assess
+go run . assess
 ```
 
 Set `OUT_DIR` in `.env` to write Markdown files and print report metadata as JSON.
@@ -98,9 +179,9 @@ Set `OUT_DIR` in `.env` to write Markdown files and print report metadata as JSO
 Legacy fixture-directory mode is still available for the checked-in sample data:
 
 ```bash
-go run ./cmd/credimi-assess \
+go run . assess \
   --fixtures-dir ./fixtures \
-  --pipeline-dir ./out \
+  --extracted-dir ./out \
   --fixture EUDI-iss-ver
 ```
 
@@ -111,7 +192,7 @@ The six checked-in fixture requests are available as copy/paste curl commands in
 Start the API server:
 
 ```bash
-go run ./cmd/credimi-api
+go run . api
 ```
 
 Generate one assessment through the API. The curl examples read `API_PORT` from `.env`:
@@ -145,17 +226,17 @@ The generator expects:
 
 - `SOURCE_DIR/credimi-flat-conformance-test-list-v1.1.md`
 - `SOURCE_DIR/credimi-conformance-aggregation-taxonomy-v1.1.yaml`
-- `temporal_input` and `temporal_output` JSON objects supplied by CLI JSON or REST body
-- `pipeline_input` JSON grouped by artifact type
+- `pipeline_input` and `pipeline_output` JSON objects supplied by CLI JSON or REST body
+- `evidence` JSON with extracted credential offers, issuer metadata, and presentation-request results
 
-Artifact groups are optional. For example, an input without credential-offer or presentation-request artifacts still produces a valid conservative report.
+Evidence groups are optional. For example, an input without credential-offer or presentation-request evidence still produces a valid conservative report.
 
 ## Design note: Go logic vs taxonomy logic
 
 Go code is intentionally limited to generic mechanics:
 
 - parse the flat test-list table into the atomic row vocabulary;
-- read Temporal input/output and pipeline artifact JSON;
+- read pipeline input/output and evidence artifact JSON;
 - build a normalized fact map such as `fixture.slug`,
   `workflow.temporal_input_present`, `credential_offer.exists`,
   `issuer.metadata_fetched`, and `presentation.exists`;
@@ -177,7 +258,13 @@ new artifact extraction needs are introduced.
 Run all tests:
 
 ```bash
-go test ./...
+task test
+```
+
+Run the repository lint task:
+
+```bash
+task lint
 ```
 
 The golden test runs the generator over all six supplied fixtures and compares

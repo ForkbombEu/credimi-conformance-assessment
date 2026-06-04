@@ -3,7 +3,7 @@
 Start the API server first:
 
 ```bash
-go run ./cmd/credimi-api
+go run . api
 ```
 
 Each command sources `.env` so `API_PORT` controls the target port. Each command is a single physical line and embeds the Temporal input/output plus pipeline artifacts as JSON. Copy one full line at a time.

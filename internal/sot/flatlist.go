@@ -3,6 +3,7 @@ package sot
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 	"strings"
@@ -24,9 +25,13 @@ func ParseFlatList(path string) ([]FlatTest, error) {
 		return nil, err
 	}
 	defer f.Close()
+	return ParseFlatListReader(path, f)
+}
+
+func ParseFlatListReader(name string, r io.Reader) ([]FlatTest, error) {
 	var rows []FlatTest
 	seen := map[int]bool{}
-	s := bufio.NewScanner(f)
+	s := bufio.NewScanner(r)
 	// allow long source refs
 	s.Buffer(make([]byte, 1024), 1024*1024*4)
 	for s.Scan() {
@@ -52,7 +57,7 @@ func ParseFlatList(path string) ([]FlatTest, error) {
 		return nil, err
 	}
 	if len(rows) == 0 {
-		return nil, fmt.Errorf("no flat conformance rows parsed from %s", path)
+		return nil, fmt.Errorf("no flat conformance rows parsed from %s", name)
 	}
 	return rows, nil
 }
