@@ -18,8 +18,8 @@ cp .env.example .env
 ```
 
 ```dotenv
-# Optional external source-of-truth directory override.
-# Leave empty to use the source-of-truth files embedded in the Go module.
+# Optional source-of-truth directory used by the CLI and REST API.
+# The checked-in template leaves this empty, and the runtime default is ./source-of-truth.
 SOURCE_DIR=
 
 # Optional path to a JSON request file used by the CLI when --input-json is not set.
@@ -33,6 +33,28 @@ OUT_DIR=
 # TCP port used by the REST API server and curl examples.
 # The API listens on this port when started without --addr.
 API_PORT=8080
+```
+
+The Go library can use the embedded source-of-truth files when `ReportOptions.SourceDir`
+is empty. The CLI and REST API load `.env` and default `SOURCE_DIR` to
+`./source-of-truth`, so local command-line runs use the checked-in taxonomy files
+unless you override the path.
+
+## Taskfile
+
+The repository automation is defined in `Taskfile.yml`; use these commands for
+local validation and CI-equivalent checks:
+
+```bash
+task test
+task lint
+task build
+```
+
+Formatting is also exposed through the Taskfile:
+
+```bash
+task fmt
 ```
 
 ## Input JSON
@@ -137,6 +159,9 @@ The repository exposes one CLI with subcommands:
 go run . help
 ```
 
+The old `./cmd/credimi-api` and `./cmd/credimi-assess` entrypoints are no longer
+present on this branch. Use the root command with `api` or `assess` instead.
+
 Generate from an input JSON file. With the default empty `OUT_DIR`, Markdown is written to stdout:
 
 ```bash
@@ -156,7 +181,7 @@ Legacy fixture-directory mode is still available for the checked-in sample data:
 ```bash
 go run . assess \
   --fixtures-dir ./fixtures \
-  --pipeline-dir ./out \
+  --extracted-dir ./out \
   --fixture EUDI-iss-ver
 ```
 
@@ -233,7 +258,13 @@ new artifact extraction needs are introduced.
 Run all tests:
 
 ```bash
-go test ./...
+task test
+```
+
+Run the repository lint task:
+
+```bash
+task lint
 ```
 
 The golden test runs the generator over all six supplied fixtures and compares
