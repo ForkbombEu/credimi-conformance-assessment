@@ -11,12 +11,16 @@ The implementation follows the handoff principle:
 
 ## Configuration
 
-Runtime defaults live in `.env`:
+Runtime defaults live in `.env`. Start from the checked-in template:
+
+```bash
+cp .env.example .env
+```
 
 ```dotenv
-# Path to the Credimi source-of-truth directory.
-# The default points at this repository's checked-in source-of-truth package.
-SOURCE_DIR=./source-of-truth
+# Optional external source-of-truth directory override.
+# Leave empty to use the source-of-truth files embedded in the Go module.
+SOURCE_DIR=
 
 # Optional path to a JSON request file used by the CLI when --input-json is not set.
 # Leave empty when Temporal data is supplied directly by CLI JSON or REST request body.
