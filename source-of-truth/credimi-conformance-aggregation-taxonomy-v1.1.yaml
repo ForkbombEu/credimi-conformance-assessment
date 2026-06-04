@@ -2600,835 +2600,347 @@ normalization_rules:
           contains_any: [EdDSA, Ed25519]
 
 assessment_rules:
-  - rule_id: golden-ageverification-150
-    test_id: 150
-    result_text: "PASSED — raw Temporal input/output included in fixture"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: age-verification
-  - rule_id: golden-eudi-iss-ver-1
+  - rule_id: realtime-wallet-pid-offer
     test_id: 1
-    result_text: "PASSED — PID credential offer processed by Wallet"
+    result_text: "PASSED - PID credential offer was present in the real-time evidence and the Wallet issuance flow completed"
     strength: definitive
     when:
       all:
-        - fact: fixture.slug
-          equals: eudi-iss-ver
-  - rule_id: golden-eudi-iss-ver-4
+        - fact: credential_offer.exists
+          equals: true
+        - fact: credential_offer.is_pid
+          equals: true
+        - fact: wallet.issuance_flow_completed
+          equals: true
+  - rule_id: realtime-wallet-auth-code
     test_id: 4
-    result_text: "PASSED — authorization_code grant observed and issuance completed"
+    result_text: "PASSED - real-time credential offer used authorization_code and Wallet issuance completed"
     strength: definitive
     when:
       all:
-        - fact: fixture.slug
-          equals: eudi-iss-ver
-  - rule_id: golden-eudi-iss-ver-6
-    test_id: 6
-    result_text: "PASSED — PID configuration uses dc+sd-jwt / urn:eudi:pid:1"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss-ver
-  - rule_id: golden-eudi-iss-ver-11
-    test_id: 11
-    result_text: "PASSED — ES256 advertised for PID SD-JWT issuance and Wallet issuance flow completed"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss-ver
-  - rule_id: golden-eudi-iss-ver-17
-    test_id: 17
-    result_text: "PASSED — later presentation flow provides black-box evidence that credential was stored/retrievable"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss-ver
-  - rule_id: golden-eudi-iss-ver-28
-    test_id: 28
-    result_text: "PASSED — HAIP/OpenID4VP presentation deeplink generated and opened by Wallet"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss-ver
-  - rule_id: golden-eudi-iss-ver-29
-    test_id: 29
-    result_text: "PASSED — signed authorization request uses vp_token + DCQL + direct_post.jwt"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss-ver
-  - rule_id: golden-eudi-iss-ver-30
-    test_id: 30
-    result_text: "PASSED — same-device haip-vp deeplink opened by Wallet automation"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss-ver
-  - rule_id: golden-eudi-iss-ver-37
-    test_id: 37
-    result_text: "PASSED — Wallet user-approved presentation via Share action"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss-ver
-  - rule_id: golden-eudi-iss-ver-43
-    test_id: 43
-    result_text: "PASSED — signed RP request with x5c was accepted by Wallet flow"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss-ver
-  - rule_id: golden-eudi-iss-ver-61
-    test_id: 61
-    result_text: "PASSED — run executed on physical Pixel 6 / Android 16 runner"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss-ver
-  - rule_id: golden-eudi-iss-ver-65
-    test_id: 65
-    result_text: "PASSED — issuer metadata fetched from .well-known/openid-credential-issuer"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss-ver
-  - rule_id: golden-eudi-iss-ver-67
-    test_id: 67
-    result_text: "PASSED — issuer metadata advertises selected PID configuration"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss-ver
-  - rule_id: golden-eudi-iss-ver-69
-    test_id: 69
-    result_text: "PASSED — issuer metadata advertises dc+sd-jwt format"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss-ver
-  - rule_id: golden-eudi-iss-ver-70
-    test_id: 70
-    result_text: "PASSED — issuer metadata advertises mso_mdoc configurations"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss-ver
-  - rule_id: golden-eudi-iss-ver-71
-    test_id: 71
-    result_text: "PASSED — issuer metadata advertises credential/proof signing algorithms"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss-ver
-  - rule_id: golden-eudi-iss-ver-73
-    test_id: 73
-    result_text: "PASSED — issuer metadata advertises JWK/cose_key binding methods"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss-ver
-  - rule_id: golden-eudi-iss-ver-74
-    test_id: 74
-    result_text: "PASSED — credential offer parsed successfully"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss-ver
-  - rule_id: golden-eudi-iss-ver-76
-    test_id: 76
-    result_text: "PASSED — offer configuration ID exists in issuer metadata"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss-ver
-  - rule_id: golden-eudi-iss-ver-77
-    test_id: 77
-    result_text: "PASSED — credential offer uses authorization_code grant"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss-ver
-  - rule_id: golden-eudi-iss-ver-80
-    test_id: 80
-    result_text: "PASSED — issuer issued PID to real Wallet in Maestro flow"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss-ver
-  - rule_id: golden-eudi-iss-ver-104
-    test_id: 104
-    result_text: "PASSED — verifier produced HAIP VP deeplink with request_uri"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss-ver
-  - rule_id: golden-eudi-iss-ver-105
-    test_id: 105
-    result_text: "PASSED — request_uri fetched and decoded as signed JWT authorization request"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss-ver
-  - rule_id: golden-eudi-iss-ver-106
-    test_id: 106
-    result_text: "PASSED — request uses vp_token, direct_post.jwt, client_id, nonce/state and DCQL"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss-ver
-  - rule_id: golden-eudi-iss-ver-107
-    test_id: 107
-    result_text: "PASSED — DCQL lists requested PID attributes"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss-ver
-  - rule_id: golden-eudi-iss-ver-108
-    test_id: 108
-    result_text: "PASSED — client_id present as x509_hash identifier"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss-ver
-  - rule_id: golden-eudi-iss-ver-109
-    test_id: 109
-    result_text: "PASSED — authorization request JWT contains x5c certificate material"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss-ver
-  - rule_id: golden-eudi-iss-ver-150
-    test_id: 150
-    result_text: "PASSED — raw Temporal input/output included in fixture"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss-ver
-  - rule_id: golden-eudi-iss-ver-151
-    test_id: 151
-    result_text: "PASSED — extracted step input/output artifacts included"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss-ver
-  - rule_id: golden-eudi-iss-ver-154
-    test_id: 154
-    result_text: "PASSED — fetched/resolved artifacts include SHA-256 hashes"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss-ver
-  - rule_id: golden-eudi-iss2-1
-    test_id: 1
-    result_text: "PASSED — offer selected PID config `eu.europa.ec.eudi.pid_vc_sd_jwt`; Wallet flow opened deeplink and completed Add/sign-in/close sequence."
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss2
-  - rule_id: golden-eudi-iss2-4
-    test_id: 4
-    result_text: "PASSED — credential offer uses `authorization_code` grant and Wallet issuance flow completed."
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss2
-  - rule_id: golden-eudi-iss2-6
-    test_id: 6
-    result_text: "PASSED — selected config is PID with `format: dc+sd-jwt` and `vct: urn:eudi:pid:1`; Wallet flow completed."
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss2
-  - rule_id: golden-eudi-iss2-11
-    test_id: 11
-    result_text: "PASSED — selected config advertises credential signing alg `ES256`; issuer metadata JWT is also `alg: ES256`; Wallet flow completed."
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss2
-  - rule_id: golden-eudi-iss2-13
-    test_id: 13
-    result_text: "PASSED — issuer metadata is a signed JWT with `x5c` header and Wallet flow completed against that issuer."
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss2
-  - rule_id: golden-eudi-iss2-65
-    test_id: 65
-    result_text: "PASSED — `.well-known/openid-credential-issuer` fetched with HTTP 200 as `application/jwt`."
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss2
-  - rule_id: golden-eudi-iss2-67
-    test_id: 67
-    result_text: "PASSED — metadata contains PID configuration `eu.europa.ec.eudi.pid_vc_sd_jwt`."
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss2
-  - rule_id: golden-eudi-iss2-69
-    test_id: 69
-    result_text: "PASSED — selected PID configuration advertises `format: dc+sd-jwt`."
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss2
-  - rule_id: golden-eudi-iss2-70
-    test_id: 70
-    result_text: "PASSED — same issuer metadata also advertises `format: mso_mdoc` for PID/mDL configurations."
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss2
-  - rule_id: golden-eudi-iss2-71
-    test_id: 71
-    result_text: "PASSED — metadata advertises credential/proof signing algorithms including `ES256` and COSE `-7` for mdoc configs."
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss2
-  - rule_id: golden-eudi-iss2-72
-    test_id: 72
-    result_text: "PASSED — issuer metadata JWT header includes `x5c` certificate chain."
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss2
-  - rule_id: golden-eudi-iss2-74
-    test_id: 74
-    result_text: "PASSED — credential offer parsed successfully with issuer, configuration ID, and grants."
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss2
-  - rule_id: golden-eudi-iss2-75
-    test_id: 75
-    result_text: "PASSED — offer issuer URL matches metadata `iss`/`sub`/`credential_issuer` (`https://issuer-backend.eudiw.dev`)."
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss2
-  - rule_id: golden-eudi-iss2-76
-    test_id: 76
-    result_text: "PASSED — offered configuration ID exists in issuer metadata."
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss2
-  - rule_id: golden-eudi-iss2-77
-    test_id: 77
-    result_text: "PASSED — offer grant type is `authorization_code`."
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss2
-  - rule_id: golden-eudi-iss2-80
-    test_id: 80
-    result_text: "PASSED — issuer generated PID SD-JWT offer and Wallet Maestro flow completed under the honest-wallet assumption."
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss2
-  - rule_id: golden-eudi-iss2-150
-    test_id: 150
-    result_text: "PASSED — assessment bundle includes Temporal `input.json` and `output.json`."
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss2
-  - rule_id: golden-eudi-iss2-151
-    test_id: 151
-    result_text: "PASSED — bundle includes extracted step input/output artifacts for the credential-offer step."
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss2
-  - rule_id: golden-eudi-iss2-152
-    test_id: 152
-    result_text: "PASSED — Temporal output includes screenshot and result-video URLs."
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudi-iss2
-  - rule_id: golden-eudiw-checks-5x-1
-    test_id: 1
-    result_text: "PASSED — PID credential offer processed by Wallet"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudiw-checks-5x
-  - rule_id: golden-eudiw-checks-5x-4
-    test_id: 4
-    result_text: "PASSED — authorization_code grant observed and issuance completed"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudiw-checks-5x
-  - rule_id: golden-eudiw-checks-5x-6
-    test_id: 6
-    result_text: "PASSED — selected PID configuration uses dc+sd-jwt / urn:eudi:pid:1"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudiw-checks-5x
-  - rule_id: golden-eudiw-checks-5x-7
-    test_id: 7
-    result_text: "PASSED — WE BUILD `VCI005 ... x509-mdoc` generated mdoc PID offer and Wallet flow completed"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudiw-checks-5x
-  - rule_id: golden-eudiw-checks-5x-11
-    test_id: 11
-    result_text: "PASSED — ES256 advertised for PID SD-JWT issuance and Wallet issuance flow completed"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudiw-checks-5x
-  - rule_id: golden-eudiw-checks-5x-13
-    test_id: 13
-    result_text: "PASSED — WE BUILD x509 SD-JWT/mdoc offer flows completed in Wallet"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudiw-checks-5x
-  - rule_id: golden-eudiw-checks-5x-14
-    test_id: 14
-    result_text: "PASSED — WE BUILD jwk/kid-jwk SD-JWT offer flows completed in Wallet"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudiw-checks-5x
-  - rule_id: golden-eudiw-checks-5x-15
-    test_id: 15
-    result_text: "PASSED — WE BUILD did_web SD-JWT offer flow completed in Wallet"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudiw-checks-5x
-  - rule_id: golden-eudiw-checks-5x-65
-    test_id: 65
-    result_text: "PASSED — issuer metadata fetched from .well-known/openid-credential-issuer"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudiw-checks-5x
-  - rule_id: golden-eudiw-checks-5x-67
-    test_id: 67
-    result_text: "PASSED — issuer metadata advertises selected PID configuration"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudiw-checks-5x
-  - rule_id: golden-eudiw-checks-5x-69
-    test_id: 69
-    result_text: "PASSED — issuer metadata advertises dc+sd-jwt format"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudiw-checks-5x
-  - rule_id: golden-eudiw-checks-5x-70
-    test_id: 70
-    result_text: "PASSED — issuer metadata also advertises mso_mdoc configurations"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudiw-checks-5x
-  - rule_id: golden-eudiw-checks-5x-71
-    test_id: 71
-    result_text: "PASSED — issuer metadata advertises supported credential/proof signing algorithms"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudiw-checks-5x
-  - rule_id: golden-eudiw-checks-5x-73
-    test_id: 73
-    result_text: "PASSED — issuer metadata advertises JWK binding methods"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudiw-checks-5x
-  - rule_id: golden-eudiw-checks-5x-74
-    test_id: 74
-    result_text: "PASSED — credential offer parsed successfully"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudiw-checks-5x
-  - rule_id: golden-eudiw-checks-5x-76
-    test_id: 76
-    result_text: "PASSED — offered credential configuration ID exists in issuer metadata"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudiw-checks-5x
-  - rule_id: golden-eudiw-checks-5x-77
-    test_id: 77
-    result_text: "PASSED — credential offer uses authorization_code grant"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudiw-checks-5x
-  - rule_id: golden-eudiw-checks-5x-80
-    test_id: 80
-    result_text: "PASSED — issuer issued PID to Wallet in Maestro flow"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudiw-checks-5x
-  - rule_id: golden-eudiw-checks-5x-150
-    test_id: 150
-    result_text: "PASSED — raw Temporal input/output included in fixture"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudiw-checks-5x
-  - rule_id: golden-eudiw-checks-5x-151
-    test_id: 151
-    result_text: "PASSED — extracted step input/output artifacts included"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudiw-checks-5x
-  - rule_id: golden-eudiw-checks-5x-152
-    test_id: 152
-    result_text: "PASSED — fixture output includes video/screenshot artifacts"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudiw-checks-5x
-  - rule_id: golden-eudiw-checks-5x-154
-    test_id: 154
-    result_text: "PASSED — fetched/resolved artifacts include SHA-256 hashes"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudiw-checks-5x
-  - rule_id: golden-eudiw-checks-5x-162
-    test_id: 162
-    result_text: "PASSED — five WE BUILD/VCI Wallet check flows generated offers and were processed by Wallet automation"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: eudiw-checks-5x
-  - rule_id: golden-multipaz-1
-    test_id: 1
-    result_text: "PASSED — PID credential offer processed by Multipaz Wallet"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: multipaz
-  - rule_id: golden-multipaz-4
-    test_id: 4
-    result_text: "PASSED — credential offer uses authorization_code grant"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: multipaz
-  - rule_id: golden-multipaz-7
-    test_id: 7
-    result_text: "PASSED — selected configuration `pid_mdoc` uses `mso_mdoc` and doctype `eu.europa.ec.eudi.pid.1`"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: multipaz
-  - rule_id: golden-multipaz-61
-    test_id: 61
-    result_text: "PASSED — run executed on Pixel 6 / Android 16 runner"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: multipaz
-  - rule_id: golden-multipaz-65
-    test_id: 65
-    result_text: "PASSED — issuer metadata fetched from .well-known/openid-credential-issuer"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: multipaz
-  - rule_id: golden-multipaz-67
-    test_id: 67
-    result_text: "PASSED — issuer metadata advertises selected PID mdoc configuration"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: multipaz
-  - rule_id: golden-multipaz-69
-    test_id: 69
-    result_text: "PASSED — issuer metadata also advertises PID SD-JWT configuration"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: multipaz
-  - rule_id: golden-multipaz-70
-    test_id: 70
-    result_text: "PASSED — issuer metadata advertises mso_mdoc format for selected PID configuration"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: multipaz
-  - rule_id: golden-multipaz-71
-    test_id: 71
-    result_text: "PASSED — issuer metadata advertises credential signing algorithm values"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: multipaz
-  - rule_id: golden-multipaz-74
-    test_id: 74
-    result_text: "PASSED — credential offer parsed successfully"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: multipaz
-  - rule_id: golden-multipaz-75
-    test_id: 75
-    result_text: "PASSED — offer issuer URL matches fetched issuer metadata origin"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: multipaz
-  - rule_id: golden-multipaz-76
-    test_id: 76
-    result_text: "PASSED — offered credential configuration ID exists in issuer metadata"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: multipaz
-  - rule_id: golden-multipaz-77
-    test_id: 77
-    result_text: "PASSED — credential offer uses authorization_code grant"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: multipaz
-  - rule_id: golden-multipaz-80
-    test_id: 80
-    result_text: "PASSED — issuer issued PID mdoc credential to real Wallet in Maestro flow"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: multipaz
-  - rule_id: golden-multipaz-150
-    test_id: 150
-    result_text: "PASSED — raw Temporal input/output included in fixture"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: multipaz
-  - rule_id: golden-multipaz-151
-    test_id: 151
-    result_text: "PASSED — extracted step input/output artifacts included"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: multipaz
-  - rule_id: golden-multipaz-152
-    test_id: 152
-    result_text: "PASSED — fixture output includes video/screenshot artifacts"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: multipaz
-  - rule_id: golden-multipaz-154
-    test_id: 154
-    result_text: "PASSED — fetched/resolved artifacts include SHA-256 hashes"
-    strength: definitive
-    when:
-      all:
-        - fact: fixture.slug
-          equals: multipaz
-  - rule_id: golden-talao-iss-cred13-5
+        - fact: credential_offer.grant_type
+          equals: authorization_code
+        - fact: wallet.issuance_flow_completed
+          equals: true
+  - rule_id: realtime-wallet-pre-auth-code
     test_id: 5
-    result_text: "PASSED — credential offer uses pre-authorized_code grant"
+    result_text: "PASSED - real-time credential offer used pre-authorized_code and Wallet issuance completed"
     strength: definitive
     when:
       all:
-        - fact: fixture.slug
-          equals: talao-iss-cred13
-  - rule_id: golden-talao-iss-cred13-12
+        - fact: credential_offer.grant_type
+          equals: urn:ietf:params:oauth:grant-type:pre-authorized_code
+        - fact: wallet.issuance_flow_completed
+          equals: true
+  - rule_id: realtime-wallet-pid-sd-jwt
+    test_id: 6
+    result_text: "PASSED - real-time issuer metadata/offer identified PID as SD-JWT and Wallet issuance completed"
+    strength: definitive
+    when:
+      all:
+        - fact: credential_offer.is_pid
+          equals: true
+        - fact: credential_offer.is_sd_jwt
+          equals: true
+        - fact: wallet.issuance_flow_completed
+          equals: true
+  - rule_id: realtime-wallet-pid-mdoc
+    test_id: 7
+    result_text: "PASSED - real-time issuer metadata/offer identified PID as mdoc and Wallet issuance completed"
+    strength: definitive
+    when:
+      all:
+        - fact: credential_offer.is_pid
+          equals: true
+        - fact: credential_offer.is_mdoc
+          equals: true
+        - fact: wallet.issuance_flow_completed
+          equals: true
+  - rule_id: realtime-wallet-es256-issuance
+    test_id: 11
+    result_text: "PASSED - real-time issuer metadata advertised ES256 and Wallet issuance completed"
+    strength: definitive
+    when:
+      all:
+        - fact: issuer.metadata_advertises_es256
+          equals: true
+        - fact: wallet.issuance_flow_completed
+          equals: true
+  - rule_id: realtime-wallet-eddsa-issuance
     test_id: 12
-    result_text: "PASSED — metadata advertises EdDSA among supported signing algorithms for selected configurations; Wallet flow completed"
+    result_text: "PASSED - real-time issuer metadata advertised EdDSA and Wallet issuance completed"
     strength: definitive
     when:
       all:
-        - fact: fixture.slug
-          equals: talao-iss-cred13
-  - rule_id: golden-talao-iss-cred13-14
+        - fact: issuer.metadata_advertises_eddsa
+          equals: true
+        - fact: wallet.issuance_flow_completed
+          equals: true
+  - rule_id: realtime-wallet-x5c-issuer-binding
+    test_id: 13
+    result_text: "PASSED - real-time issuer metadata contained x5c material and Wallet issuance completed"
+    strength: definitive
+    when:
+      all:
+        - fact: issuer.metadata_has_x5c
+          equals: true
+        - fact: wallet.issuance_flow_completed
+          equals: true
+  - rule_id: realtime-wallet-jwk-binding
     test_id: 14
-    result_text: "PASSED — selected configurations advertise did:jwk / did:key binding methods"
+    result_text: "PASSED - real-time issuer metadata advertised JWK binding and Wallet issuance completed"
     strength: definitive
     when:
       all:
-        - fact: fixture.slug
-          equals: talao-iss-cred13
-  - rule_id: golden-talao-iss-cred13-15
+        - fact: issuer.metadata_advertises_jwk_binding
+          equals: true
+        - fact: wallet.issuance_flow_completed
+          equals: true
+  - rule_id: realtime-wallet-did-binding
     test_id: 15
-    result_text: "PASSED — selected configurations use DID-based binding methods (`did:jwk`, `did:key`)"
+    result_text: "PASSED - real-time issuer metadata advertised DID binding and Wallet issuance completed"
     strength: definitive
     when:
       all:
-        - fact: fixture.slug
-          equals: talao-iss-cred13
-  - rule_id: golden-talao-iss-cred13-65
+        - fact: issuer.metadata_advertises_did_binding
+          equals: true
+        - fact: wallet.issuance_flow_completed
+          equals: true
+  - rule_id: realtime-wallet-presentation-after-issuance
+    test_id: 17
+    result_text: "PASSED - real-time presentation evidence after issuance showed the credential was usable by the Wallet"
+    strength: conditional
+    when:
+      all:
+        - fact: wallet.issuance_flow_completed
+          equals: true
+        - fact: wallet.presentation_flow_completed
+          equals: true
+  - rule_id: realtime-wallet-presentation-request-received
+    test_id: 28
+    result_text: "PASSED - real-time presentation request evidence was present and Wallet presentation flow completed"
+    strength: definitive
+    when:
+      all:
+        - fact: presentation.exists
+          equals: true
+        - fact: wallet.presentation_flow_completed
+          equals: true
+  - rule_id: realtime-wallet-openid4vp-request
+    test_id: 29
+    result_text: "PASSED - real-time signed OpenID4VP request evidence was present and Wallet presentation flow completed"
+    strength: definitive
+    when:
+      all:
+        - fact: presentation.jwt_signed
+          equals: true
+        - fact: wallet.presentation_flow_completed
+          equals: true
+  - rule_id: realtime-wallet-same-device-presentation
+    test_id: 30
+    result_text: "PASSED - real-time same-device presentation flow completed from supplied Temporal output and presentation evidence"
+    strength: definitive
+    when:
+      all:
+        - fact: presentation.exists
+          equals: true
+        - fact: wallet.presentation_flow_completed
+          equals: true
+  - rule_id: realtime-wallet-share-completed
+    test_id: 37
+    result_text: "PASSED - real-time Wallet presentation share flow completed"
+    strength: definitive
+    when:
+      all:
+        - fact: wallet.presentation_share_completed
+          equals: true
+  - rule_id: realtime-wallet-rp-x5c-accepted
+    test_id: 43
+    result_text: "PASSED - real-time presentation request included x5c material and Wallet presentation flow completed"
+    strength: definitive
+    when:
+      all:
+        - fact: presentation.has_x5c
+          equals: true
+        - fact: wallet.presentation_flow_completed
+          equals: true
+  - rule_id: realtime-physical-android-runner
+    test_id: 61
+    result_text: "PASSED - real-time Temporal input/output indicates an Android physical-device style runner"
+    strength: definitive
+    when:
+      all:
+        - fact: wallet.ran_on_physical_android
+          equals: true
+  - rule_id: realtime-issuer-metadata-fetched
     test_id: 65
-    result_text: "PASSED — issuer metadata fetched from .well-known/openid-credential-issuer"
+    result_text: "PASSED - real-time .well-known issuer metadata was supplied"
     strength: definitive
     when:
       all:
-        - fact: fixture.slug
-          equals: talao-iss-cred13
-  - rule_id: golden-talao-iss-cred13-71
+        - fact: issuer.metadata_fetched
+          equals: true
+  - rule_id: realtime-issuer-pid-metadata
+    test_id: 67
+    result_text: "PASSED - real-time issuer metadata advertised PID material"
+    strength: definitive
+    when:
+      all:
+        - fact: issuer.metadata_advertises_pid
+          equals: true
+  - rule_id: realtime-issuer-sd-jwt-metadata
+    test_id: 69
+    result_text: "PASSED - real-time issuer metadata advertised SD-JWT"
+    strength: definitive
+    when:
+      all:
+        - fact: issuer.metadata_advertises_sd_jwt
+          equals: true
+  - rule_id: realtime-issuer-mdoc-metadata
+    test_id: 70
+    result_text: "PASSED - real-time issuer metadata advertised mdoc"
+    strength: definitive
+    when:
+      all:
+        - fact: issuer.metadata_advertises_mdoc
+          equals: true
+  - rule_id: realtime-issuer-signing-algorithms
     test_id: 71
-    result_text: "PASSED — issuer metadata advertises supported signing algorithms"
+    result_text: "PASSED - real-time issuer metadata advertised credential/proof signing algorithms"
     strength: definitive
     when:
       all:
-        - fact: fixture.slug
-          equals: talao-iss-cred13
-  - rule_id: golden-talao-iss-cred13-73
+        - fact: issuer.metadata_advertises_es256
+          equals: true
+  - rule_id: realtime-issuer-x5c-metadata
+    test_id: 72
+    result_text: "PASSED - real-time issuer metadata contained x5c certificate material"
+    strength: definitive
+    when:
+      all:
+        - fact: issuer.metadata_has_x5c
+          equals: true
+  - rule_id: realtime-issuer-binding-methods
     test_id: 73
-    result_text: "PASSED — issuer metadata advertises JWK/DID binding methods"
+    result_text: "PASSED - real-time issuer metadata advertised JWK/DID binding methods"
     strength: definitive
     when:
       all:
-        - fact: fixture.slug
-          equals: talao-iss-cred13
-  - rule_id: golden-talao-iss-cred13-74
+        - fact: issuer.metadata_advertises_jwk_binding
+          equals: true
+  - rule_id: realtime-credential-offer-parsed
     test_id: 74
-    result_text: "PASSED — credential offer parsed successfully"
+    result_text: "PASSED - real-time credential offer parsed successfully"
     strength: definitive
     when:
       all:
-        - fact: fixture.slug
-          equals: talao-iss-cred13
-  - rule_id: golden-talao-iss-cred13-76
+        - fact: credential_offer.exists
+          equals: true
+  - rule_id: realtime-offered-config-in-metadata
     test_id: 76
-    result_text: "PASSED — offered credential configuration IDs exist in issuer metadata"
+    result_text: "PASSED - real-time offered credential configuration ID was found in supplied issuer metadata"
     strength: definitive
     when:
       all:
-        - fact: fixture.slug
-          equals: talao-iss-cred13
-  - rule_id: golden-talao-iss-cred13-78
+        - fact: issuer.offered_configuration_present
+          equals: true
+  - rule_id: realtime-issuer-authorization-code
+    test_id: 77
+    result_text: "PASSED - real-time credential offer used authorization_code grant"
+    strength: definitive
+    when:
+      all:
+        - fact: credential_offer.grant_type
+          equals: authorization_code
+  - rule_id: realtime-issuer-pre-authorized-code
     test_id: 78
-    result_text: "PASSED — credential offer uses pre-authorized_code grant"
+    result_text: "PASSED - real-time credential offer used pre-authorized_code grant"
     strength: definitive
     when:
       all:
-        - fact: fixture.slug
-          equals: talao-iss-cred13
-  - rule_id: golden-talao-iss-cred13-150
+        - fact: credential_offer.grant_type
+          equals: urn:ietf:params:oauth:grant-type:pre-authorized_code
+  - rule_id: realtime-issuer-issued-to-wallet
+    test_id: 80
+    result_text: "PASSED - real-time credential offer evidence and Temporal output show Wallet issuance completed"
+    strength: definitive
+    when:
+      all:
+        - fact: credential_offer.exists
+          equals: true
+        - fact: wallet.issuance_flow_completed
+          equals: true
+  - rule_id: realtime-verifier-request-present
+    test_id: 104
+    result_text: "PASSED - real-time verifier/presentation request evidence was supplied"
+    strength: definitive
+    when:
+      all:
+        - fact: presentation.exists
+          equals: true
+  - rule_id: realtime-verifier-request-signed
+    test_id: 105
+    result_text: "PASSED - real-time presentation request was signed or represented as JWT evidence"
+    strength: definitive
+    when:
+      all:
+        - fact: presentation.jwt_signed
+          equals: true
+  - rule_id: realtime-verifier-vp-token
+    test_id: 106
+    result_text: "PASSED - real-time presentation request used vp_token"
+    strength: definitive
+    when:
+      all:
+        - fact: presentation.response_type
+          equals: vp_token
+  - rule_id: realtime-verifier-client-id
+    test_id: 108
+    result_text: "PASSED - real-time presentation request included client_id"
+    strength: definitive
+    when:
+      all:
+        - fact: presentation.client_id
+          exists: true
+  - rule_id: realtime-verifier-x5c
+    test_id: 109
+    result_text: "PASSED - real-time presentation request included x5c certificate material"
+    strength: definitive
+    when:
+      all:
+        - fact: presentation.has_x5c
+          equals: true
+  - rule_id: realtime-raw-temporal-bundle
     test_id: 150
-    result_text: "PASSED — raw Temporal input/output included in fixture"
+    result_text: "PASSED - real-time request included raw Temporal input and output"
     strength: definitive
     when:
       all:
-        - fact: fixture.slug
-          equals: talao-iss-cred13
-  - rule_id: golden-talao-iss-cred13-151
+        - fact: workflow.temporal_input_present
+          equals: true
+        - fact: workflow.temporal_output_present
+          equals: true
+  - rule_id: realtime-step-evidence-bundle
     test_id: 151
-    result_text: "PASSED — extracted step input/output artifacts included"
+    result_text: "PASSED - real-time request included extracted step evidence"
     strength: definitive
     when:
       all:
-        - fact: fixture.slug
-          equals: talao-iss-cred13
-  - rule_id: golden-talao-iss-cred13-154
+        - fact: evidence.step_artifacts_present
+          equals: true
+  - rule_id: realtime-screenshot-video-bundle
+    test_id: 152
+    result_text: "PASSED - real-time Temporal output referenced screenshot/video artifacts"
+    strength: definitive
+    when:
+      all:
+        - fact: workflow.has_screenshots_or_videos
+          equals: true
+  - rule_id: realtime-hashed-artifacts
     test_id: 154
-    result_text: "PASSED — fetched/resolved artifacts include SHA-256 hashes"
+    result_text: "PASSED - real-time evidence payload was hashed by the report generator"
     strength: definitive
     when:
       all:
-        - fact: fixture.slug
-          equals: talao-iss-cred13
+        - fact: evidence.artifacts_hashed
+          equals: true

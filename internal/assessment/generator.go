@@ -8,7 +8,6 @@ import (
 	"sort"
 
 	"github.com/forkbombeu/credimi-conformance-assessment/internal/facts"
-	"github.com/forkbombeu/credimi-conformance-assessment/internal/fixture"
 	"github.com/forkbombeu/credimi-conformance-assessment/internal/report"
 	"github.com/forkbombeu/credimi-conformance-assessment/internal/rules"
 	"github.com/forkbombeu/credimi-conformance-assessment/internal/sot"
@@ -64,31 +63,16 @@ func Generate(opts Options) (Result, error) {
 	if err != nil {
 		return Result{}, err
 	}
-	if hasInlineInput(opts) {
-		af, err := facts.BuildInline(
-			opts.Fixture,
-			opts.PipelineInput,
-			opts.PipelineOutput,
-			opts.Evidence,
-		)
-		if err != nil {
-			return Result{}, err
-		}
-		return renderReports(opts, src, []facts.AssessmentFacts{af})
-	}
-	fs, err := fixture.List(opts.FixturesDir, opts.ExtractedDir, opts.Fixture)
+	af, err := facts.BuildInline(
+		opts.Fixture,
+		opts.PipelineInput,
+		opts.PipelineOutput,
+		opts.Evidence,
+	)
 	if err != nil {
 		return Result{}, err
 	}
-	afs := make([]facts.AssessmentFacts, 0, len(fs))
-	for _, f := range fs {
-		af, err := facts.Build(f)
-		if err != nil {
-			return Result{}, err
-		}
-		afs = append(afs, af)
-	}
-	return renderReports(opts, src, afs)
+	return renderReports(opts, src, []facts.AssessmentFacts{af})
 }
 
 func loadSource(sourceDir string) (*sot.Source, error) {
@@ -147,9 +131,4 @@ func ApplyRequest(opts Options, req Request) Options {
 		opts.Evidence = req.Evidence
 	}
 	return opts
-}
-func hasInlineInput(opts Options) bool {
-	return len(opts.PipelineInput) > 0 ||
-		len(opts.PipelineOutput) > 0 ||
-		len(opts.Evidence) > 0
 }

@@ -109,7 +109,7 @@ The CLI and REST API accept the same JSON shape:
 }
 ```
 
-`pipeline_input` and `pipeline_output` are the Credimi pipeline request and execution result. `evidence` is the normalized conformance evidence object produced by Credimi pipeline evidence extraction. It carries the resolved credential offers, issuer metadata, and presentation-request results needed to produce a meaningful report.
+`pipeline_input` and `pipeline_output` are the package field names for the Credimi pipeline request and execution result. The REST/JSON decoder also accepts `temporal_input`/`temporal-input` and `temporal_output`/`temporal-output` aliases from runtime integrations. `evidence` is the normalized conformance evidence object produced by Credimi pipeline evidence extraction. It carries the resolved credential offers, issuer metadata, and presentation-request results needed to produce a meaningful report.
 
 ## Library
 
@@ -147,9 +147,9 @@ When `ReportOptions.SourceDir` is empty, the library reads the source-of-truth f
 
 `ReportInput` separates pipeline data from conformance evidence:
 
-- `pipeline_input`: Credimi pipeline request/workflow input.
-- `pipeline_output`: Credimi pipeline execution result/workflow output.
-- `evidence`: normalized extracted evidence with `credential_offers`, `credential_well_knowns`, and `presentation_results`, matching the evidence structure produced by Credimi pipeline evidence extraction.
+- `pipeline_input` / `temporal_input`: Credimi pipeline request/workflow input.
+- `pipeline_output` / `temporal_output`: Credimi pipeline execution result/workflow output.
+- `evidence`: normalized extracted evidence with `credential_offers`, `credential_well_knowns`, and `presentation_results`, matching the evidence structure produced by Credimi pipeline evidence extraction. These groups may also be supplied as top-level JSON fields by runtime integrations.
 
 ## CLI Usage
 
@@ -267,15 +267,4 @@ Run the repository lint task:
 task lint
 ```
 
-The golden test runs the generator over all six supplied fixtures and compares
-semantic output against `golden-assessments/*.md`:
-
-- the passed-test set;
-- the passed-test count;
-- the non-empty result text for each passed row;
-- required Markdown sections and conservative blank-row policy text.
-
-The initial renderer is deterministic but does not try to byte-for-byte clone the
-older manually generated reports; it preserves the required conformance result
-semantics while emitting the normalized report structure requested in the
-handoff.
+The regression tests assert that known fixture names do not grant passes by themselves. Passed rows must come from real-time Temporal input/output and supplied evidence such as credential offers, `.well-known` issuer metadata, and presentation results.

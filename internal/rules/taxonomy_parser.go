@@ -51,13 +51,16 @@ func ParseTaxonomy(b []byte) Taxonomy {
 			cur.Strength = unquote(after(trimmed, "strength:"))
 		case strings.HasPrefix(trimmed, "equals:"):
 			val := unquote(after(trimmed, "equals:"))
-			// The handoff rules use one fact equality per rule. Keep this small
-			// parser deterministic while the evaluator supports richer predicates
-			// for tests and future programmatic Taxonomy construction.
 			if len(cur.When.All) == 0 || cur.When.All[len(cur.When.All)-1].Equals != nil {
 				cur.When.All = append(cur.When.All, Condition{})
 			}
 			cur.When.All[len(cur.When.All)-1].Equals = val
+		case strings.HasPrefix(trimmed, "exists:"):
+			val := unquote(after(trimmed, "exists:")) == "true"
+			if len(cur.When.All) == 0 || cur.When.All[len(cur.When.All)-1].Exists != nil {
+				cur.When.All = append(cur.When.All, Condition{})
+			}
+			cur.When.All[len(cur.When.All)-1].Exists = &val
 		case strings.HasPrefix(trimmed, "fact:") || strings.HasPrefix(trimmed, "- fact:"):
 			fact := unquote(after(strings.TrimPrefix(trimmed, "- "), "fact:"))
 			if len(cur.When.All) == 0 || cur.When.All[len(cur.When.All)-1].Fact != "" {

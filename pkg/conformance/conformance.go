@@ -17,6 +17,66 @@ type ReportInput struct {
 	Evidence       json.RawMessage `json:"evidence,omitempty"`
 }
 
+// UnmarshalJSON accepts both the package vocabulary and Credimi runtime
+// vocabulary. Runtime callers usually send temporal_input/temporal_output.
+func (r *ReportInput) UnmarshalJSON(b []byte) error {
+	type alias ReportInput
+	var raw struct {
+		alias
+		TemporalInput        json.RawMessage `json:"temporal_input,omitempty"`
+		TemporalInputDash    json.RawMessage `json:"temporal-input,omitempty"`
+		TemporalOutput       json.RawMessage `json:"temporal_output,omitempty"`
+		TemporalOutputDash   json.RawMessage `json:"temporal-output,omitempty"`
+		CredentialOffers     json.RawMessage `json:"credential_offers,omitempty"`
+		CredentialWellKnowns json.RawMessage `json:"credential_well_knowns,omitempty"`
+		WellKnowns           json.RawMessage `json:"well_knowns,omitempty"`
+		PresentationResults  json.RawMessage `json:"presentation_results,omitempty"`
+	}
+	if err := json.Unmarshal(b, &raw); err != nil {
+		return err
+	}
+	*r = ReportInput(raw.alias)
+	if len(r.PipelineInput) == 0 {
+		r.PipelineInput = firstRaw(raw.TemporalInput, raw.TemporalInputDash)
+	}
+	if len(r.PipelineOutput) == 0 {
+		r.PipelineOutput = firstRaw(raw.TemporalOutput, raw.TemporalOutputDash)
+	}
+	if len(r.Evidence) == 0 {
+		r.Evidence = evidenceEnvelope(raw.CredentialOffers, raw.CredentialWellKnowns, raw.WellKnowns, raw.PresentationResults)
+	}
+	return nil
+}
+
+func firstRaw(values ...json.RawMessage) json.RawMessage {
+	for _, v := range values {
+		if len(v) > 0 {
+			return v
+		}
+	}
+	return nil
+}
+
+func evidenceEnvelope(credentialOffers, credentialWellKnowns, wellKnowns, presentationResults json.RawMessage) json.RawMessage {
+	m := map[string]json.RawMessage{}
+	if len(credentialOffers) > 0 {
+		m["credential_offers"] = credentialOffers
+	}
+	if len(credentialWellKnowns) > 0 {
+		m["credential_well_knowns"] = credentialWellKnowns
+	} else if len(wellKnowns) > 0 {
+		m["credential_well_knowns"] = wellKnowns
+	}
+	if len(presentationResults) > 0 {
+		m["presentation_results"] = presentationResults
+	}
+	if len(m) == 0 {
+		return nil
+	}
+	b, _ := json.Marshal(m)
+	return b
+}
+
 // ReportOptions configures source material and optional filesystem output.
 type ReportOptions struct {
 	SourceDir    string `json:"source_dir,omitempty"`
@@ -52,7 +112,7 @@ func LoadInput(path string) (ReportInput, error) {
 	return input, nil
 }
 
-// Generate returns reports for inline payloads or fixture directories.
+// Generate returns reports from the supplied runtime payload and source-of-truth rules.
 func Generate(input ReportInput, opts ReportOptions) (ReportResult, error) {
 	res, err := assessment.Generate(toInternalOptions(input, opts))
 	if err != nil {

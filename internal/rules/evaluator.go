@@ -34,6 +34,8 @@ func FlattenFacts(af facts.AssessmentFacts) map[string]any {
 	m["workflow.temporal_input_present"] = af.Workflow.TemporalInputPresent
 	m["workflow.temporal_output_present"] = af.Workflow.TemporalOutputPresent
 	m["workflow.has_screenshots_or_videos"] = af.Workflow.HasScreenshotsOrVideos
+	m["workflow.has_completed_steps"] = af.Workflow.HasCompletedSteps
+	m["workflow.has_failures"] = af.Workflow.HasFailures
 	m["workflow.workflow_id"] = af.Workflow.WorkflowID
 	m["workflow.run_id"] = af.Workflow.RunID
 	m["evidence.step_artifacts_present"] = af.Evidence.StepArtifactsPresent
@@ -43,6 +45,9 @@ func FlattenFacts(af facts.AssessmentFacts) map[string]any {
 	if len(af.CredentialOffers) > 0 {
 		co := af.CredentialOffers[0]
 		m["credential_offer.grant_type"] = co.GrantType
+		m["credential_offer.is_pid"] = co.IsPID
+		m["credential_offer.is_sd_jwt"] = co.IsSDJWT
+		m["credential_offer.is_mdoc"] = co.IsMdoc
 		m["credential.configuration_id"] = co.ConfigurationID
 		m["credential.issuer_url"] = co.IssuerURL
 	}
@@ -61,12 +66,20 @@ func FlattenFacts(af facts.AssessmentFacts) map[string]any {
 	m["wallet.presentation_flow_completed"] = af.Wallet.PresentationFlowCompleted
 	m["wallet.presentation_share_completed"] = af.Wallet.PresentationShareCompleted
 	m["wallet.no_visible_error"] = af.Wallet.NoVisibleError
+	m["wallet.ran_on_physical_android"] = af.Wallet.RanOnPhysicalAndroid
 	m["issuer.metadata_fetched"] = af.Issuer.MetadataFetched
 	m["issuer.metadata_format"] = af.Issuer.MetadataFormat
 	m["issuer.metadata_advertises_pid"] = af.Issuer.MetadataAdvertisesPID
 	m["issuer.metadata_advertises_sd_jwt"] = af.Issuer.MetadataAdvertisesSDJWT
 	m["issuer.metadata_advertises_mdoc"] = af.Issuer.MetadataAdvertisesMdoc
 	m["issuer.metadata_advertises_signing_algorithms"] = af.Issuer.MetadataAdvertisesSigningAlgorithms
+	m["issuer.metadata_advertises_es256"] = contains(af.Issuer.MetadataAdvertisesSigningAlgorithms, "ES256")
+	m["issuer.metadata_advertises_eddsa"] = contains(af.Issuer.MetadataAdvertisesSigningAlgorithms, "EdDSA")
+	m["issuer.metadata_advertises_rs256"] = contains(af.Issuer.MetadataAdvertisesSigningAlgorithms, "RS256")
+	m["issuer.metadata_has_x5c"] = af.Issuer.MetadataHasX5C
+	m["issuer.offered_configuration_present"] = af.Issuer.OfferedConfigurationPresent
+	m["issuer.metadata_advertises_jwk_binding"] = af.Issuer.MetadataAdvertisesJWKBinding
+	m["issuer.metadata_advertises_did_binding"] = af.Issuer.MetadataAdvertisesDIDBinding
 	return m
 }
 func evalCond(c Condition, m map[string]any) bool {
@@ -95,7 +108,8 @@ func evalCond(c Condition, m map[string]any) bool {
 	}
 	val, ok := m[key]
 	if c.Exists != nil {
-		return ok == *c.Exists
+		present := ok && fmt.Sprint(val) != ""
+		return present == *c.Exists
 	}
 	if !ok {
 		return false

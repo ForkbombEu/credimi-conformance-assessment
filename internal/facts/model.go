@@ -14,6 +14,7 @@ type AssessmentFacts struct {
 type FixtureFacts struct{ Name, Slug string }
 type WorkflowFacts struct {
 	TemporalInputPresent, TemporalOutputPresent, HasScreenshotsOrVideos bool
+	HasCompletedSteps, HasFailures                                      bool
 	WorkflowID, RunID, Name                                             string
 	Steps                                                               []string
 }
@@ -24,6 +25,7 @@ type EvidenceFacts struct {
 type CredentialOfferFacts struct {
 	Exists                                                                          bool
 	ConfigurationID, IssuerURL, GrantType, RawFormat, VCT, Doctype, Profile, Format string
+	IsPID, IsSDJWT, IsMdoc                                                          bool
 	SigningAlgorithms, ProofSigningAlgorithms, BindingMethods                       []string
 }
 type PresentationFacts struct {
@@ -34,7 +36,9 @@ type PresentationFacts struct {
 type WalletFacts struct{ IssuanceFlowCompleted, PresentationFlowCompleted, PresentationShareCompleted, NoVisibleError, RanOnPhysicalAndroid bool }
 type IssuerFacts struct {
 	MetadataFetched, MetadataAdvertisesPID, MetadataAdvertisesSDJWT, MetadataAdvertisesMdoc, MetadataAdvertisesJWKBinding, MetadataAdvertisesDIDBinding bool
-	MetadataFormat, MetadataContentType                                                                                                                 string
+	MetadataHasX5C, OfferedConfigurationPresent                                                                                                         bool
+	MetadataFormat, MetadataContentType, IssuerURL                                                                                                      string
+	ConfigurationIDs                                                                                                                                    []string
 	MetadataAdvertisesSigningAlgorithms                                                                                                                 []string
 }
 type VerifierFacts struct{ CallbackResultPresent bool }

@@ -2,8 +2,10 @@ package facts
 
 import (
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -63,9 +65,11 @@ func BuildInline(
 	af.Fixture.Name, af.Fixture.Slug = name, fixture.Slug(name)
 	if hasJSON(pipelineInput) {
 		applyTemporalInput(&af, pipelineInput)
+		_ = applyEvidence(&af, pipelineInput)
 	}
 	if hasJSON(pipelineOutput) {
 		applyTemporalOutput(&af, pipelineOutput)
+		_ = applyEvidence(&af, pipelineOutput)
 	}
 	if hasJSON(evidence) {
 		if err := applyEvidence(&af, evidence); err != nil {
@@ -79,7 +83,14 @@ func BuildInline(
 
 func applyTemporalInput(af *AssessmentFacts, b []byte) {
 	af.Workflow.TemporalInputPresent = true
-	af.Workflow.Name = stringValue(parseJSON(b), "name", "workflow_name")
+	s := string(b)
+	af.Workflow.Name = firstJSONString(s, "name", "workflow_name")
+	if af.Workflow.Name == "" {
+		af.Workflow.Name = firstJSONString(s, "workflowDefinitionName")
+	}
+	if strings.Contains(strings.ToLower(s), "android") || strings.Contains(strings.ToLower(s), "pixel") {
+		af.Wallet.RanOnPhysicalAndroid = true
+	}
 }
 func applyTemporalOutput(af *AssessmentFacts, b []byte) {
 	af.Workflow.TemporalOutputPresent = true
@@ -90,29 +101,76 @@ func applyEvidence(af *AssessmentFacts, b []byte) error {
 	if err := json.Unmarshal(b, &m); err != nil {
 		return err
 	}
+	used := false
 	for _, raw := range rawArray(m, "credential_offers") {
 		af.CredentialOffers = append(af.CredentialOffers, readCredentialOfferEvidenceBytes(raw))
+		used = true
 	}
-	for _, raw := range rawArray(m, "credential_well_knowns") {
+	for _, raw := range rawArray(m, "credential_offer_resolution_chains") {
 		var item map[string]json.RawMessage
 		if err := json.Unmarshal(raw, &item); err != nil {
 			return err
 		}
-		if hasJSON(item["well_known"]) {
-			mergeIssuer(af, readWellKnownBytes(item["well_known"]))
+		if hasJSON(item["CredentialOffer"]) {
+			af.CredentialOffers = append(af.CredentialOffers, readOfferBytes(item["CredentialOffer"]))
+			used = true
 		}
-		if hasJSON(item["fetch"]) {
-			markHashed(af, item["fetch"])
+		if hasJSON(item["credential_offer"]) {
+			af.CredentialOffers = append(af.CredentialOffers, readOfferBytes(item["credential_offer"]))
+			used = true
+		}
+		if hasJSON(item["IssuerMetadata"]) {
+			mergeIssuer(af, readWellKnownBytes(item["IssuerMetadata"]))
+			used = true
+		}
+		if hasJSON(item["issuer_metadata"]) {
+			mergeIssuer(af, readWellKnownBytes(item["issuer_metadata"]))
+			used = true
+		}
+	}
+	for _, key := range []string{"credential_well_knowns", "well_knowns", "well_known"} {
+		for _, raw := range rawArray(m, key) {
+			var item map[string]json.RawMessage
+			if err := json.Unmarshal(raw, &item); err == nil {
+				switch {
+				case hasJSON(item["well_known"]):
+					mergeIssuer(af, readWellKnownBytes(item["well_known"]))
+				case hasJSON(item["IssuerMetadata"]):
+					mergeIssuer(af, readWellKnownBytes(item["IssuerMetadata"]))
+				case hasJSON(item["issuer_metadata"]):
+					mergeIssuer(af, readWellKnownBytes(item["issuer_metadata"]))
+				default:
+					mergeIssuer(af, readWellKnownBytes(raw))
+				}
+				if hasJSON(item["fetch"]) {
+					markHashed(af, item["fetch"])
+				}
+			} else {
+				mergeIssuer(af, readWellKnownBytes(raw))
+			}
+			used = true
 		}
 	}
 	for _, raw := range rawArray(m, "presentation_results") {
 		var item map[string]json.RawMessage
-		if err := json.Unmarshal(raw, &item); err != nil {
-			return err
+		if err := json.Unmarshal(raw, &item); err == nil {
+			switch {
+			case hasJSON(item["result"]):
+				af.Presentations = append(af.Presentations, readPresentationBytes(item["result"]))
+			case hasJSON(item["request_uri_output"]):
+				af.Presentations = append(af.Presentations, readPresentationBytes(item["request_uri_output"]))
+			default:
+				af.Presentations = append(af.Presentations, readPresentationBytes(raw))
+			}
+		} else {
+			af.Presentations = append(af.Presentations, readPresentationBytes(raw))
 		}
-		if hasJSON(item["result"]) {
-			af.Presentations = append(af.Presentations, readPresentationBytes(item["result"]))
-		}
+		used = true
+	}
+	if used {
+		af.Evidence.StepArtifactsPresent = true
+		af.Evidence.ExtractionSummaryPresent = true
+		markHashed(af, b)
 	}
 	return nil
 }
@@ -133,11 +191,20 @@ func hasJSON(b []byte) bool {
 	return s != "" && s != "null"
 }
 func finalize(af *AssessmentFacts) {
+	for i := range af.CredentialOffers {
+		co := &af.CredentialOffers[i]
+		if co.ConfigurationID != "" && stringIn(co.ConfigurationID, af.Issuer.ConfigurationIDs) {
+			af.Issuer.OfferedConfigurationPresent = true
+		}
+		co.IsPID = co.IsPID || af.Issuer.MetadataAdvertisesPID
+		co.IsSDJWT = co.IsSDJWT || af.Issuer.MetadataAdvertisesSDJWT
+		co.IsMdoc = co.IsMdoc || af.Issuer.MetadataAdvertisesMdoc
+	}
 	if len(af.CredentialOffers) > 0 {
-		af.Wallet.IssuanceFlowCompleted = af.Workflow.TemporalOutputPresent && af.Wallet.NoVisibleError
+		af.Wallet.IssuanceFlowCompleted = af.Workflow.TemporalOutputPresent && af.Workflow.HasCompletedSteps && af.Wallet.NoVisibleError
 	}
 	if len(af.Presentations) > 0 {
-		af.Wallet.PresentationFlowCompleted = af.Workflow.TemporalOutputPresent && af.Wallet.NoVisibleError
+		af.Wallet.PresentationFlowCompleted = af.Workflow.TemporalOutputPresent && af.Workflow.HasCompletedSteps && af.Wallet.NoVisibleError
 		af.Wallet.PresentationShareCompleted = af.Wallet.PresentationFlowCompleted
 	}
 }
@@ -159,10 +226,16 @@ func stringValue(v any, keys ...string) string {
 }
 func extractOutputFacts(af *AssessmentFacts, b []byte) {
 	s := string(b)
-	af.Wallet.NoVisibleError = !strings.Contains(s, "Oups! Something went wrong")
-	af.Workflow.HasScreenshotsOrVideos = strings.Contains(s, "screenshot") || strings.Contains(s, "video")
+	ls := strings.ToLower(s)
+	af.Workflow.HasCompletedSteps = strings.Contains(s, "COMPLETED") || strings.Contains(ls, "\"status\":\"ok\"") || strings.Contains(ls, "\"status\": \"ok\"")
+	af.Workflow.HasFailures = strings.Contains(s, "FAILED") || strings.Contains(ls, "\"status\":\"error\"") || strings.Contains(ls, "\"status\": \"error\"") || strings.Contains(ls, "exception") || strings.Contains(ls, "traceback")
+	af.Wallet.NoVisibleError = af.Workflow.HasCompletedSteps && !af.Workflow.HasFailures
+	af.Workflow.HasScreenshotsOrVideos = strings.Contains(ls, "screenshot") || strings.Contains(ls, "video")
 	af.Workflow.WorkflowID = firstJSONString(s, "workflow_id", "workflow-id", "workflowId")
 	af.Workflow.RunID = firstJSONString(s, "run_id", "workflow-run-id", "workflowRunId")
+	if strings.Contains(strings.ToLower(s), "android") || strings.Contains(strings.ToLower(s), "pixel") {
+		af.Wallet.RanOnPhysicalAndroid = true
+	}
 }
 func firstJSONString(s string, keys ...string) string {
 	for _, key := range keys {
@@ -204,55 +277,66 @@ func readCredentialOfferEvidenceBytes(b []byte) CredentialOfferFacts {
 func readOfferBytes(b []byte) CredentialOfferFacts {
 	m := asMap(parseJSON(b))
 	co := CredentialOfferFacts{Exists: true}
-	co.IssuerURL = stringValue(m, "credential_issuer")
+	co.IssuerURL = stringValue(m, "credential_issuer", "credentialIssuer")
 	if ids, ok := m["credential_configuration_ids"].([]any); ok && len(ids) > 0 {
 		co.ConfigurationID = toString(ids[0])
 	}
+	co.Format = stringValue(m, "format")
+	co.VCT = stringValue(m, "vct")
+	co.Doctype = stringValue(m, "doctype")
 	if grants := asMap(m["grants"]); len(grants) > 0 {
 		for k := range grants {
 			co.GrantType = k
 			break
 		}
 	}
+	s := string(b)
+	ls := strings.ToLower(s + " " + co.ConfigurationID + " " + co.Format + " " + co.VCT + " " + co.Doctype)
+	co.IsPID = strings.Contains(ls, "pid") || strings.Contains(ls, "person identification")
+	co.IsSDJWT = strings.Contains(ls, "sd-jwt") || strings.Contains(ls, "dc+sd-jwt") || strings.Contains(ls, "vc+sd-jwt")
+	co.IsMdoc = strings.Contains(ls, "mso_mdoc") || strings.Contains(ls, "mdoc")
 	return co
 }
 func readWellKnown(path string) IssuerFacts { b, _ := os.ReadFile(path); return readWellKnownBytes(b) }
 func readWellKnownBytes(b []byte) IssuerFacts {
 	s := string(b)
+	analysis := s + " " + decodedCompactJWT(s)
 	is := IssuerFacts{MetadataFetched: true, MetadataFormat: "JSON"}
-	if strings.Count(s, ".") >= 2 && !strings.HasPrefix(strings.TrimSpace(s), "{") {
+	trimmed := strings.TrimSpace(s)
+	if strings.Count(trimmed, ".") >= 2 && !strings.HasPrefix(trimmed, "{") {
 		is.MetadataFormat = "JWT"
 	}
-	if strings.Contains(s, "dc+sd-jwt") || strings.Contains(s, "vc+sd-jwt") {
-		is.MetadataAdvertisesSDJWT = true
-	}
-	if strings.Contains(s, "mso_mdoc") {
-		is.MetadataAdvertisesMdoc = true
-	}
-	if strings.Contains(strings.ToLower(s), "pid") {
-		is.MetadataAdvertisesPID = true
-	}
-	if strings.Contains(s, "did:jwk") {
-		is.MetadataAdvertisesJWKBinding = true
-	}
-	if strings.Contains(s, "did:key") {
-		is.MetadataAdvertisesDIDBinding = true
-	}
-	for _, alg := range []string{"ES256", "ES384", "ES512", "EdDSA", "RS256"} {
-		if strings.Contains(s, alg) {
+	ls := strings.ToLower(analysis)
+	is.IssuerURL = firstJSONString(analysis, "credential_issuer", "issuer", "iss")
+	is.MetadataAdvertisesSDJWT = strings.Contains(ls, "dc+sd-jwt") || strings.Contains(ls, "vc+sd-jwt") || strings.Contains(ls, "sd-jwt")
+	is.MetadataAdvertisesMdoc = strings.Contains(ls, "mso_mdoc") || strings.Contains(ls, "mdoc")
+	is.MetadataAdvertisesPID = strings.Contains(ls, "pid") || strings.Contains(ls, "person identification")
+	is.MetadataAdvertisesJWKBinding = strings.Contains(ls, "did:jwk") || strings.Contains(ls, "\"jwk\"")
+	is.MetadataAdvertisesDIDBinding = strings.Contains(ls, "did:key") || strings.Contains(ls, "did:web")
+	is.MetadataHasX5C = strings.Contains(ls, "\"x5c\"")
+	for _, alg := range []string{"ES256", "ES384", "ES512", "EdDSA", "RS256", "ES256K"} {
+		if strings.Contains(analysis, alg) {
 			is.MetadataAdvertisesSigningAlgorithms = append(is.MetadataAdvertisesSigningAlgorithms, alg)
 		}
 	}
+	is.ConfigurationIDs = appendUnique(nil, mapKeys(asMap(asMap(parseJSON(b))["credential_configurations_supported"]))...)
 	return is
 }
 func mergeIssuer(af *AssessmentFacts, is IssuerFacts) {
 	af.Issuer.MetadataFetched = af.Issuer.MetadataFetched || is.MetadataFetched
-	af.Issuer.MetadataFormat = is.MetadataFormat
+	if is.MetadataFormat != "" {
+		af.Issuer.MetadataFormat = is.MetadataFormat
+	}
+	if is.IssuerURL != "" {
+		af.Issuer.IssuerURL = is.IssuerURL
+	}
 	af.Issuer.MetadataAdvertisesPID = af.Issuer.MetadataAdvertisesPID || is.MetadataAdvertisesPID
 	af.Issuer.MetadataAdvertisesSDJWT = af.Issuer.MetadataAdvertisesSDJWT || is.MetadataAdvertisesSDJWT
 	af.Issuer.MetadataAdvertisesMdoc = af.Issuer.MetadataAdvertisesMdoc || is.MetadataAdvertisesMdoc
 	af.Issuer.MetadataAdvertisesJWKBinding = af.Issuer.MetadataAdvertisesJWKBinding || is.MetadataAdvertisesJWKBinding
 	af.Issuer.MetadataAdvertisesDIDBinding = af.Issuer.MetadataAdvertisesDIDBinding || is.MetadataAdvertisesDIDBinding
+	af.Issuer.MetadataHasX5C = af.Issuer.MetadataHasX5C || is.MetadataHasX5C
+	af.Issuer.ConfigurationIDs = appendUnique(af.Issuer.ConfigurationIDs, is.ConfigurationIDs...)
 	af.Issuer.MetadataAdvertisesSigningAlgorithms = appendUnique(af.Issuer.MetadataAdvertisesSigningAlgorithms, is.MetadataAdvertisesSigningAlgorithms...)
 }
 func readPresentation(path string) PresentationFacts {
@@ -261,21 +345,58 @@ func readPresentation(path string) PresentationFacts {
 }
 func readPresentationBytes(b []byte) PresentationFacts {
 	s := string(b)
+	analysis := s + " " + decodedCompactJWT(s)
 	p := PresentationFacts{Exists: true, RequestURIFetched: true}
-	p.JWTSigned = strings.Contains(s, "\"alg\"")
-	p.HasX5C = strings.Contains(s, "\"x5c\"")
-	p.JWTAlg = findJSONString(s, "alg")
-	p.ResponseType = findJSONString(s, "response_type")
-	p.ResponseMode = findJSONString(s, "response_mode")
-	p.ClientID = findJSONString(s, "client_id")
+	ls := strings.ToLower(analysis)
+	p.JWTSigned = strings.Contains(ls, "\"alg\"") || strings.Contains(ls, "jwt")
+	p.HasX5C = strings.Contains(ls, "\"x5c\"")
+	p.JWTAlg = firstJSONString(analysis, "alg")
+	p.ResponseType = firstJSONString(analysis, "response_type")
+	p.ResponseMode = firstJSONString(analysis, "response_mode")
+	p.ClientID = firstJSONString(analysis, "client_id")
+	p.ClientIDScheme = firstJSONString(analysis, "client_id_scheme")
 	return p
 }
 func toString(v any) string {
-	if s, ok := v.(string); ok {
-		return s
+	switch x := v.(type) {
+	case string:
+		return x
+	case float64:
+		return strings.TrimSuffix(strings.TrimSuffix(fmt.Sprintf("%f", x), "0"), ".")
+	default:
+		return ""
 	}
-	return ""
 }
+func mapKeys(m map[string]any) []string {
+	out := make([]string, 0, len(m))
+	for k := range m {
+		out = append(out, k)
+	}
+	return out
+}
+func stringIn(s string, values []string) bool {
+	for _, v := range values {
+		if v == s {
+			return true
+		}
+	}
+	return false
+}
+func decodedCompactJWT(s string) string {
+	parts := strings.Split(strings.TrimSpace(s), ".")
+	if len(parts) < 2 {
+		return ""
+	}
+	var out []string
+	for _, part := range parts[:2] {
+		b, err := base64.RawURLEncoding.DecodeString(part)
+		if err == nil {
+			out = append(out, string(b))
+		}
+	}
+	return strings.Join(out, " ")
+}
+
 func appendUnique(a []string, vals ...string) []string {
 	seen := map[string]bool{}
 	for _, x := range a {
