@@ -50,7 +50,13 @@ func Build(f fixture.Fixture) (AssessmentFacts, error) {
 	return af, nil
 }
 
-func BuildInline(name string, temporalInput, temporalOutput, pipelineInput json.RawMessage) (AssessmentFacts, error) {
+func BuildInline(
+	name string,
+	temporalInput json.RawMessage,
+	temporalOutput json.RawMessage,
+	pipelineInput json.RawMessage,
+	pipelineOutput json.RawMessage,
+) (AssessmentFacts, error) {
 	if name == "" {
 		name = "inline-assessment"
 	}
@@ -67,6 +73,12 @@ func BuildInline(name string, temporalInput, temporalOutput, pipelineInput json.
 			return AssessmentFacts{}, err
 		}
 		markHashed(&af, pipelineInput)
+	}
+	if hasJSON(pipelineOutput) {
+		if err := applyPipelineOutput(&af, pipelineOutput); err != nil {
+			return AssessmentFacts{}, err
+		}
+		markHashed(&af, pipelineOutput)
 	}
 	finalize(&af)
 	return af, nil
@@ -102,6 +114,34 @@ func applyPipelineInput(af *AssessmentFacts, b []byte) error {
 	for _, key := range []string{"presentation_requests", "request_uri_outputs"} {
 		for _, raw := range rawArray(m, key) {
 			af.Presentations = append(af.Presentations, readPresentationBytes(raw))
+		}
+	}
+	return nil
+}
+func applyPipelineOutput(af *AssessmentFacts, b []byte) error {
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return err
+	}
+	for _, raw := range rawArray(m, "credential_well_knowns") {
+		var item map[string]json.RawMessage
+		if err := json.Unmarshal(raw, &item); err != nil {
+			return err
+		}
+		if hasJSON(item["well_known"]) {
+			mergeIssuer(af, readWellKnownBytes(item["well_known"]))
+		}
+		if hasJSON(item["fetch"]) {
+			markHashed(af, item["fetch"])
+		}
+	}
+	for _, raw := range rawArray(m, "presentation_results") {
+		var item map[string]json.RawMessage
+		if err := json.Unmarshal(raw, &item); err != nil {
+			return err
+		}
+		if hasJSON(item["result"]) {
+			af.Presentations = append(af.Presentations, readPresentationBytes(item["result"]))
 		}
 	}
 	return nil

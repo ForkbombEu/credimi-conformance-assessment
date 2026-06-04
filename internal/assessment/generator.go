@@ -22,6 +22,7 @@ type Options struct {
 	TemporalInput  json.RawMessage
 	TemporalOutput json.RawMessage
 	PipelineInput  json.RawMessage
+	PipelineOutput json.RawMessage
 	FixturesDir    string
 	ExtractedDir   string
 }
@@ -31,6 +32,7 @@ type Request struct {
 	TemporalInput  json.RawMessage `json:"temporal_input"`
 	TemporalOutput json.RawMessage `json:"temporal_output"`
 	PipelineInput  json.RawMessage `json:"pipeline_input"`
+	PipelineOutput json.RawMessage `json:"pipeline_output"`
 }
 
 type Report struct {
@@ -64,7 +66,13 @@ func Generate(opts Options) (Result, error) {
 		return Result{}, err
 	}
 	if hasInlineInput(opts) {
-		af, err := facts.BuildInline(opts.Fixture, opts.TemporalInput, opts.TemporalOutput, opts.PipelineInput)
+		af, err := facts.BuildInline(
+			opts.Fixture,
+			opts.TemporalInput,
+			opts.TemporalOutput,
+			opts.PipelineInput,
+			opts.PipelineOutput,
+		)
 		if err != nil {
 			return Result{}, err
 		}
@@ -136,8 +144,14 @@ func ApplyRequest(opts Options, req Request) Options {
 	if len(req.PipelineInput) > 0 {
 		opts.PipelineInput = req.PipelineInput
 	}
+	if len(req.PipelineOutput) > 0 {
+		opts.PipelineOutput = req.PipelineOutput
+	}
 	return opts
 }
 func hasInlineInput(opts Options) bool {
-	return len(opts.TemporalInput) > 0 || len(opts.TemporalOutput) > 0 || len(opts.PipelineInput) > 0
+	return len(opts.TemporalInput) > 0 ||
+		len(opts.TemporalOutput) > 0 ||
+		len(opts.PipelineInput) > 0 ||
+		len(opts.PipelineOutput) > 0
 }

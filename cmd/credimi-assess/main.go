@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"os"
 
-	"credimi-conformance-assessment/internal/assessment"
+	"credimi-conformance-assessment/internal/cli"
 	"credimi-conformance-assessment/internal/config"
+	"credimi-conformance-assessment/pkg/conformance"
 )
 
 func main() {
@@ -26,8 +27,12 @@ func run() error {
 	extractedDir := flag.String("extracted-dir", "", "legacy extracted pipeline artifact directory")
 	outDir := flag.String("out-dir", "", "legacy output directory override")
 	flag.Parse()
+	if len(os.Args) == 1 {
+		fmt.Fprint(os.Stderr, cli.ASCIIArt)
+	}
 	cfg := config.Load(*envPath)
-	opts := assessment.Options{SourceDir: cfg.SourceDir, TemporalData: cfg.TemporalData, OutDir: cfg.OutDir, Fixture: *fixtureName}
+	input := conformance.ReportInput{Fixture: *fixtureName}
+	opts := conformance.ReportOptions{SourceDir: cfg.SourceDir, OutDir: cfg.OutDir}
 	if *sourceDir != "" {
 		opts.SourceDir = *sourceDir
 	}
@@ -48,13 +53,16 @@ func run() error {
 		path = cfg.TemporalData
 	}
 	if path != "" {
-		req, err := assessment.LoadRequest(path)
+		req, err := conformance.LoadInput(path)
 		if err != nil {
 			return err
 		}
-		opts = assessment.ApplyRequest(opts, req)
+		if req.Fixture == "" {
+			req.Fixture = input.Fixture
+		}
+		input = req
 	}
-	res, err := assessment.Generate(opts)
+	res, err := conformance.Generate(input, opts)
 	if err != nil {
 		return err
 	}

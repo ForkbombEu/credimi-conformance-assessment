@@ -8,8 +8,9 @@ import (
 	"net/http"
 	"os"
 
-	"credimi-conformance-assessment/internal/assessment"
+	"credimi-conformance-assessment/internal/cli"
 	"credimi-conformance-assessment/internal/config"
+	"credimi-conformance-assessment/pkg/conformance"
 )
 
 type errorResponse struct {
@@ -29,6 +30,7 @@ func main() {
 		}
 		listenAddr = ":" + cfg.APIPort
 	}
+	fmt.Fprint(os.Stderr, cli.ASCIIArt)
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /assessments", func(w http.ResponseWriter, r *http.Request) { handleAssessments(w, r, cfg) })
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
@@ -41,7 +43,7 @@ func main() {
 	}
 }
 func handleAssessments(w http.ResponseWriter, r *http.Request, cfg config.Config) {
-	var req assessment.Request
+	var req conformance.ReportInput
 	if r.Body != nil {
 		defer r.Body.Close()
 	}
@@ -49,8 +51,7 @@ func handleAssessments(w http.ResponseWriter, r *http.Request, cfg config.Config
 		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "invalid JSON request body"})
 		return
 	}
-	opts := assessment.ApplyRequest(assessment.Options{SourceDir: cfg.SourceDir, TemporalData: cfg.TemporalData, OutDir: cfg.OutDir}, req)
-	res, err := assessment.Generate(opts)
+	res, err := conformance.Generate(req, conformance.ReportOptions{SourceDir: cfg.SourceDir, OutDir: cfg.OutDir})
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, errorResponse{Error: err.Error()})
 		return
