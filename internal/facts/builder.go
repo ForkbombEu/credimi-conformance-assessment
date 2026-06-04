@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"credimi-conformance-assessment/internal/fixture"
+	"github.com/forkbombeu/credimi-conformance-assessment/internal/fixture"
 )
 
 func Build(f fixture.Fixture) (AssessmentFacts, error) {

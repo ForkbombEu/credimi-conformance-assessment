@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"credimi-conformance-assessment/internal/rules"
+	"github.com/forkbombeu/credimi-conformance-assessment/internal/rules"
 )
 
 type Source struct {

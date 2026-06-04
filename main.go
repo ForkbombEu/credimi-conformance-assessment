@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"credimi-conformance-assessment/internal/cli"
-	"credimi-conformance-assessment/internal/commands/api"
-	"credimi-conformance-assessment/internal/commands/assess"
+	"github.com/forkbombeu/credimi-conformance-assessment/internal/cli"
+	"github.com/forkbombeu/credimi-conformance-assessment/internal/commands/api"
+	"github.com/forkbombeu/credimi-conformance-assessment/internal/commands/assess"
 )
 
 var version = "dev"

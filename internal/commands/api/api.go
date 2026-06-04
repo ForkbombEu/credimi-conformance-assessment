@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"os"
 
-	"credimi-conformance-assessment/internal/cli"
-	"credimi-conformance-assessment/internal/config"
-	"credimi-conformance-assessment/pkg/conformance"
+	"github.com/forkbombeu/credimi-conformance-assessment/internal/cli"
+	"github.com/forkbombeu/credimi-conformance-assessment/internal/config"
+	"github.com/forkbombeu/credimi-conformance-assessment/pkg/conformance"
 )
 
 type errorResponse struct {

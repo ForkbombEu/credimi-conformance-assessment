@@ -6,9 +6,9 @@ import (
 	"sort"
 	"strings"
 
-	"credimi-conformance-assessment/internal/facts"
-	"credimi-conformance-assessment/internal/rules"
-	"credimi-conformance-assessment/internal/sot"
+	"github.com/forkbombeu/credimi-conformance-assessment/internal/facts"
+	"github.com/forkbombeu/credimi-conformance-assessment/internal/rules"
+	"github.com/forkbombeu/credimi-conformance-assessment/internal/sot"
 )
 
 func Render(af facts.AssessmentFacts, tests []sot.FlatTest, results map[int]rules.Result) string {

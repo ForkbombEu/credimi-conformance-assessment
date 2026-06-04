@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"credimi-conformance-assessment/internal/assessment"
+	"github.com/forkbombeu/credimi-conformance-assessment/internal/assessment"
 )
 
 // ReportInput is the stable request payload for generating conformance reports.

@@ -3,7 +3,7 @@ package rules
 import (
 	"testing"
 
-	"credimi-conformance-assessment/internal/facts"
+	"github.com/forkbombeu/credimi-conformance-assessment/internal/facts"
 )
 
 func TestEvaluatePredicates(t *testing.T) {

@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"credimi-conformance-assessment/internal/facts"
+	"github.com/forkbombeu/credimi-conformance-assessment/internal/facts"
 )
 
 func Evaluate(t Taxonomy, af facts.AssessmentFacts) map[int]Result {

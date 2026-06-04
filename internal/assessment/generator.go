@@ -7,12 +7,12 @@ import (
 	"path/filepath"
 	"sort"
 
-	"credimi-conformance-assessment/internal/facts"
-	"credimi-conformance-assessment/internal/fixture"
-	"credimi-conformance-assessment/internal/report"
-	"credimi-conformance-assessment/internal/rules"
-	"credimi-conformance-assessment/internal/sot"
-	sourceoftruth "credimi-conformance-assessment/source-of-truth"
+	"github.com/forkbombeu/credimi-conformance-assessment/internal/facts"
+	"github.com/forkbombeu/credimi-conformance-assessment/internal/fixture"
+	"github.com/forkbombeu/credimi-conformance-assessment/internal/report"
+	"github.com/forkbombeu/credimi-conformance-assessment/internal/rules"
+	"github.com/forkbombeu/credimi-conformance-assessment/internal/sot"
+	sourceoftruth "github.com/forkbombeu/credimi-conformance-assessment/source-of-truth"
 )
 
 type Options struct {
