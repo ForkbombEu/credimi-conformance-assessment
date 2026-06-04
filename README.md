@@ -49,39 +49,45 @@ The CLI and REST API accept the same JSON shape:
     "workflow_id": "example-workflow-id",
     "run_id": "example-run-id"
   },
-  "evidence_input": {
-    "discovered_steps": {},
-    "extraction_summary": {},
+  "evidence": {
     "credential_offers": [
       {
-        "credential_issuer": "https://issuer.example",
-        "credential_configuration_ids": ["pid_sd_jwt"],
-        "grants": {
-          "urn:ietf:params:oauth:grant-type:pre-authorized_code": {}
+        "step_id": "credential-step",
+        "credential_id": "tenant/credential",
+        "credential_offer": {
+          "credential_issuer": "https://issuer.example",
+          "credential_configuration_ids": ["pid_sd_jwt"],
+          "grants": {
+            "urn:ietf:params:oauth:grant-type:pre-authorized_code": {}
+          }
         }
       }
     ],
-    "well_known": [
+    "credential_well_knowns": [
       {
-        "credential_endpoint": "https://issuer.example/credential",
-        "credential_configurations_supported": {
-          "pid_sd_jwt": {
-            "format": "vc+sd-jwt",
-            "proof_types_supported": {
-              "jwt": {
-                "proof_signing_alg_values_supported": ["ES256"]
+        "step_id": "credential-step",
+        "credential_id": "tenant/credential",
+        "well_known": {
+          "credential_endpoint": "https://issuer.example/credential",
+          "credential_configurations_supported": {
+            "pid_sd_jwt": {
+              "format": "vc+sd-jwt",
+              "proof_types_supported": {
+                "jwt": {
+                  "proof_signing_alg_values_supported": ["ES256"]
+                }
               }
             }
           }
         }
       }
     ],
-    "presentation_requests": []
+    "presentation_results": []
   }
 }
 ```
 
-`pipeline_input` and `pipeline_output` are the Credimi pipeline request and execution result. `evidence_input` is intentionally structured by artifact type instead of mirroring a full directory tree. That shape is practical for REST payloads and keeps the extraction logic deterministic. A single huge opaque evidence JSON object would work poorly for validation, streaming, provenance, and future partial re-processing; if payloads become large, prefer storing artifacts externally and sending references or a manifest.
+`pipeline_input` and `pipeline_output` are the Credimi pipeline request and execution result. `evidence` is the normalized conformance evidence object produced by Credimi pipeline evidence extraction. It carries the resolved credential offers, issuer metadata, and presentation-request results needed to produce a meaningful report.
 
 ## Library
 
@@ -102,7 +108,8 @@ func GenerateReport() (conformance.ReportResult, error) {
 			Fixture:        "EUDI-iss-ver",
 			PipelineInput:  json.RawMessage(`{"name":"EUDI issuer verification"}`),
 			PipelineOutput: json.RawMessage(`{"workflow_id":"wf","run_id":"run"}`),
-			EvidenceOutput: json.RawMessage(`{
+			Evidence: json.RawMessage(`{
+				"credential_offers": [],
 				"credential_well_knowns": [],
 				"presentation_results": []
 			}`),
@@ -120,8 +127,7 @@ When `ReportOptions.SourceDir` is empty, the library reads the source-of-truth f
 
 - `pipeline_input`: Credimi pipeline request/workflow input.
 - `pipeline_output`: Credimi pipeline execution result/workflow output.
-- `evidence_input`: grouped artifact JSON used by CLI/API payloads.
-- `evidence_output`: extracted evidence output with `credential_well_knowns` and `presentation_results`, matching the evidence structure produced by Credimi pipeline evidence extraction.
+- `evidence`: normalized extracted evidence with `credential_offers`, `credential_well_knowns`, and `presentation_results`, matching the evidence structure produced by Credimi pipeline evidence extraction.
 
 ## CLI Usage
 
@@ -196,9 +202,9 @@ The generator expects:
 - `SOURCE_DIR/credimi-flat-conformance-test-list-v1.1.md`
 - `SOURCE_DIR/credimi-conformance-aggregation-taxonomy-v1.1.yaml`
 - `pipeline_input` and `pipeline_output` JSON objects supplied by CLI JSON or REST body
-- `evidence_input` JSON grouped by artifact type, or `evidence_output` JSON with extracted evidence results
+- `evidence` JSON with extracted credential offers, issuer metadata, and presentation-request results
 
-Artifact groups are optional. For example, an input without credential-offer or presentation-request artifacts still produces a valid conservative report.
+Evidence groups are optional. For example, an input without credential-offer or presentation-request evidence still produces a valid conservative report.
 
 ## Design note: Go logic vs taxonomy logic
 

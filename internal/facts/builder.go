@@ -54,8 +54,7 @@ func BuildInline(
 	name string,
 	pipelineInput json.RawMessage,
 	pipelineOutput json.RawMessage,
-	evidenceInput json.RawMessage,
-	evidenceOutput json.RawMessage,
+	evidence json.RawMessage,
 ) (AssessmentFacts, error) {
 	if name == "" {
 		name = "inline-assessment"
@@ -68,17 +67,11 @@ func BuildInline(
 	if hasJSON(pipelineOutput) {
 		applyTemporalOutput(&af, pipelineOutput)
 	}
-	if hasJSON(evidenceInput) {
-		if err := applyEvidenceInput(&af, evidenceInput); err != nil {
+	if hasJSON(evidence) {
+		if err := applyEvidence(&af, evidence); err != nil {
 			return AssessmentFacts{}, err
 		}
-		markHashed(&af, evidenceInput)
-	}
-	if hasJSON(evidenceOutput) {
-		if err := applyEvidenceOutput(&af, evidenceOutput); err != nil {
-			return AssessmentFacts{}, err
-		}
-		markHashed(&af, evidenceOutput)
+		markHashed(&af, evidence)
 	}
 	finalize(&af)
 	return af, nil
@@ -92,36 +85,13 @@ func applyTemporalOutput(af *AssessmentFacts, b []byte) {
 	af.Workflow.TemporalOutputPresent = true
 	extractOutputFacts(af, b)
 }
-func applyEvidenceInput(af *AssessmentFacts, b []byte) error {
+func applyEvidence(af *AssessmentFacts, b []byte) error {
 	var m map[string]json.RawMessage
 	if err := json.Unmarshal(b, &m); err != nil {
 		return err
-	}
-	if hasJSON(m["discovered_steps"]) {
-		af.Evidence.StepArtifactsPresent = true
-	}
-	if hasJSON(m["extraction_summary"]) {
-		af.Evidence.ExtractionSummaryPresent = true
 	}
 	for _, raw := range rawArray(m, "credential_offers") {
-		af.CredentialOffers = append(af.CredentialOffers, readOfferBytes(raw))
-	}
-	for _, key := range []string{"well_known", "issuer_metadata"} {
-		for _, raw := range rawArray(m, key) {
-			mergeIssuer(af, readWellKnownBytes(raw))
-		}
-	}
-	for _, key := range []string{"presentation_requests", "request_uri_outputs"} {
-		for _, raw := range rawArray(m, key) {
-			af.Presentations = append(af.Presentations, readPresentationBytes(raw))
-		}
-	}
-	return nil
-}
-func applyEvidenceOutput(af *AssessmentFacts, b []byte) error {
-	var m map[string]json.RawMessage
-	if err := json.Unmarshal(b, &m); err != nil {
-		return err
+		af.CredentialOffers = append(af.CredentialOffers, readCredentialOfferEvidenceBytes(raw))
 	}
 	for _, raw := range rawArray(m, "credential_well_knowns") {
 		var item map[string]json.RawMessage
@@ -146,6 +116,7 @@ func applyEvidenceOutput(af *AssessmentFacts, b []byte) error {
 	}
 	return nil
 }
+
 func rawArray(m map[string]json.RawMessage, key string) []json.RawMessage {
 	raw := m[key]
 	if !hasJSON(raw) {
@@ -190,8 +161,16 @@ func extractOutputFacts(af *AssessmentFacts, b []byte) {
 	s := string(b)
 	af.Wallet.NoVisibleError = !strings.Contains(s, "Oups! Something went wrong")
 	af.Workflow.HasScreenshotsOrVideos = strings.Contains(s, "screenshot") || strings.Contains(s, "video")
-	af.Workflow.WorkflowID = findJSONString(s, "workflow_id")
-	af.Workflow.RunID = findJSONString(s, "run_id")
+	af.Workflow.WorkflowID = firstJSONString(s, "workflow_id", "workflow-id", "workflowId")
+	af.Workflow.RunID = firstJSONString(s, "run_id", "workflow-run-id", "workflowRunId")
+}
+func firstJSONString(s string, keys ...string) string {
+	for _, key := range keys {
+		if value := findJSONString(s, key); value != "" {
+			return value
+		}
+	}
+	return ""
 }
 func findJSONString(s, k string) string {
 	idx := strings.Index(s, "\""+k+"\"")
@@ -215,6 +194,13 @@ func findJSONString(s, k string) string {
 	return rest[:e]
 }
 func readOffer(path string) CredentialOfferFacts { b, _ := os.ReadFile(path); return readOfferBytes(b) }
+func readCredentialOfferEvidenceBytes(b []byte) CredentialOfferFacts {
+	var item map[string]json.RawMessage
+	if err := json.Unmarshal(b, &item); err == nil && hasJSON(item["credential_offer"]) {
+		return readOfferBytes(item["credential_offer"])
+	}
+	return readOfferBytes(b)
+}
 func readOfferBytes(b []byte) CredentialOfferFacts {
 	m := asMap(parseJSON(b))
 	co := CredentialOfferFacts{Exists: true}

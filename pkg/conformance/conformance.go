@@ -14,8 +14,7 @@ type ReportInput struct {
 	Fixture        string          `json:"fixture,omitempty"`
 	PipelineInput  json.RawMessage `json:"pipeline_input,omitempty"`
 	PipelineOutput json.RawMessage `json:"pipeline_output,omitempty"`
-	EvidenceInput  json.RawMessage `json:"evidence_input,omitempty"`
-	EvidenceOutput json.RawMessage `json:"evidence_output,omitempty"`
+	Evidence       json.RawMessage `json:"evidence,omitempty"`
 }
 
 // ReportOptions configures source material and optional filesystem output.
@@ -69,8 +68,7 @@ func toInternalOptions(input ReportInput, opts ReportOptions) assessment.Options
 		Fixture:        input.Fixture,
 		PipelineInput:  input.PipelineInput,
 		PipelineOutput: input.PipelineOutput,
-		EvidenceInput:  input.EvidenceInput,
-		EvidenceOutput: input.EvidenceOutput,
+		Evidence:       input.Evidence,
 		FixturesDir:    opts.FixturesDir,
 		ExtractedDir:   opts.ExtractedDir,
 	}

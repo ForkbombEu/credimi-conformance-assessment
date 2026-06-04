@@ -22,8 +22,7 @@ type Options struct {
 	Fixture        string
 	PipelineInput  json.RawMessage
 	PipelineOutput json.RawMessage
-	EvidenceInput  json.RawMessage
-	EvidenceOutput json.RawMessage
+	Evidence       json.RawMessage
 	FixturesDir    string
 	ExtractedDir   string
 }
@@ -32,8 +31,7 @@ type Request struct {
 	Fixture        string          `json:"fixture"`
 	PipelineInput  json.RawMessage `json:"pipeline_input"`
 	PipelineOutput json.RawMessage `json:"pipeline_output"`
-	EvidenceInput  json.RawMessage `json:"evidence_input"`
-	EvidenceOutput json.RawMessage `json:"evidence_output"`
+	Evidence       json.RawMessage `json:"evidence"`
 }
 
 type Report struct {
@@ -71,8 +69,7 @@ func Generate(opts Options) (Result, error) {
 			opts.Fixture,
 			opts.PipelineInput,
 			opts.PipelineOutput,
-			opts.EvidenceInput,
-			opts.EvidenceOutput,
+			opts.Evidence,
 		)
 		if err != nil {
 			return Result{}, err
@@ -146,17 +143,13 @@ func ApplyRequest(opts Options, req Request) Options {
 	if len(req.PipelineOutput) > 0 {
 		opts.PipelineOutput = req.PipelineOutput
 	}
-	if len(req.EvidenceInput) > 0 {
-		opts.EvidenceInput = req.EvidenceInput
-	}
-	if len(req.EvidenceOutput) > 0 {
-		opts.EvidenceOutput = req.EvidenceOutput
+	if len(req.Evidence) > 0 {
+		opts.Evidence = req.Evidence
 	}
 	return opts
 }
 func hasInlineInput(opts Options) bool {
 	return len(opts.PipelineInput) > 0 ||
 		len(opts.PipelineOutput) > 0 ||
-		len(opts.EvidenceInput) > 0 ||
-		len(opts.EvidenceOutput) > 0
+		len(opts.Evidence) > 0
 }

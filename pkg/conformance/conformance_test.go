@@ -6,8 +6,21 @@ import (
 	"testing"
 )
 
-func TestGenerateUsesPipelineOutputEvidence(t *testing.T) {
-	evidenceOutput := json.RawMessage(`{
+func TestGenerateUsesPipelineEvidence(t *testing.T) {
+	evidence := json.RawMessage(`{
+		"credential_offers": [
+			{
+				"step_id": "cred-step",
+				"credential_id": "tenant/credential",
+				"credential_offer": {
+					"credential_issuer": "https://issuer.example",
+					"credential_configuration_ids": ["pid"],
+					"grants": {
+						"urn:ietf:params:oauth:grant-type:pre-authorized_code": {}
+					}
+				}
+			}
+		],
 		"credential_well_knowns": [
 			{
 				"step_id": "cred-step",
@@ -42,8 +55,8 @@ func TestGenerateUsesPipelineOutputEvidence(t *testing.T) {
 		ReportInput{
 			Fixture:        "pipeline-output",
 			PipelineInput:  json.RawMessage(`{"name":"pipeline-output"}`),
-			PipelineOutput: json.RawMessage(`{"workflow_id":"wf","run_id":"run","output":"COMPLETED"}`),
-			EvidenceOutput: evidenceOutput,
+			PipelineOutput: json.RawMessage(`{"workflow-id":"wf","workflow-run-id":"run","output":"COMPLETED"}`),
+			Evidence:       evidence,
 		},
 		ReportOptions{SourceDir: "../../source-of-truth"},
 	)
@@ -60,7 +73,7 @@ func TestGenerateUsesPipelineOutputEvidence(t *testing.T) {
 	if rep.Markdown == "" {
 		t.Fatal("markdown should be returned when out dir is empty")
 	}
-	if !strings.Contains(rep.Markdown, "Credential-offer artifacts: `0`") {
+	if !strings.Contains(rep.Markdown, "Credential-offer artifacts: `1`") {
 		t.Fatalf("unexpected credential offer count in markdown")
 	}
 	if !strings.Contains(rep.Markdown, "Presentation-request artifacts: `1`") {
