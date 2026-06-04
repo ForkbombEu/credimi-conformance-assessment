@@ -121,7 +121,7 @@ package example
 import (
 	"encoding/json"
 
-	"credimi-conformance-assessment/pkg/conformance"
+	"github.com/forkbombeu/credimi-conformance-assessment/pkg/conformance"
 )
 
 func GenerateReport() (conformance.ReportResult, error) {
