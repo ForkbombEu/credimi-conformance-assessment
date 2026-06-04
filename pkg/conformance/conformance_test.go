@@ -70,3 +70,28 @@ func TestGenerateUsesPipelineOutputEvidence(t *testing.T) {
 		t.Fatalf("well-known evidence was not reflected in markdown")
 	}
 }
+
+func TestGenerateUsesEmbeddedSourceByDefault(t *testing.T) {
+	t.Chdir(t.TempDir())
+
+	res, err := Generate(
+		ReportInput{
+			Fixture:        "embedded-source",
+			TemporalInput:  json.RawMessage(`{"name":"embedded-source"}`),
+			TemporalOutput: json.RawMessage(`{"workflow_id":"wf","run_id":"run"}`),
+		},
+		ReportOptions{},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(res.Reports) != 1 {
+		t.Fatalf("reports count got %d want 1", len(res.Reports))
+	}
+	if res.Reports[0].Slug != "embedded-source" {
+		t.Fatalf("slug got %q", res.Reports[0].Slug)
+	}
+	if res.Reports[0].Markdown == "" {
+		t.Fatal("markdown should be generated from embedded source")
+	}
+}

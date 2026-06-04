@@ -12,6 +12,7 @@ import (
 	"credimi-conformance-assessment/internal/report"
 	"credimi-conformance-assessment/internal/rules"
 	"credimi-conformance-assessment/internal/sot"
+	sourceoftruth "credimi-conformance-assessment/source-of-truth"
 )
 
 type Options struct {
@@ -61,7 +62,7 @@ func LoadRequest(path string) (Request, error) {
 
 func Generate(opts Options) (Result, error) {
 	opts = withDefaults(opts)
-	src, err := sot.Load(opts.SourceDir)
+	src, err := loadSource(opts.SourceDir)
 	if err != nil {
 		return Result{}, err
 	}
@@ -93,6 +94,13 @@ func Generate(opts Options) (Result, error) {
 	return renderReports(opts, src, afs)
 }
 
+func loadSource(sourceDir string) (*sot.Source, error) {
+	if sourceDir != "" {
+		return sot.Load(sourceDir)
+	}
+	return sot.LoadFS(sourceoftruth.FS)
+}
+
 func renderReports(opts Options, src *sot.Source, afs []facts.AssessmentFacts) (Result, error) {
 	if opts.OutDir != "" {
 		if err := os.MkdirAll(opts.OutDir, 0755); err != nil {
@@ -120,9 +128,6 @@ func renderReports(opts Options, src *sot.Source, afs []facts.AssessmentFacts) (
 }
 
 func withDefaults(opts Options) Options {
-	if opts.SourceDir == "" {
-		opts.SourceDir = "./source-of-truth"
-	}
 	if opts.FixturesDir == "" {
 		opts.FixturesDir = "./fixtures"
 	}

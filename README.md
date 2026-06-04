@@ -103,14 +103,14 @@ func GenerateReport() (conformance.ReportResult, error) {
 				"presentation_results": []
 			}`),
 		},
-		conformance.ReportOptions{
-			SourceDir: "./source-of-truth",
-		},
+		conformance.ReportOptions{},
 	)
 }
 ```
 
 The library only generates reports. A caller that runs inside Credimi or any workflow runtime should wrap `conformance.Generate` in its own integration code and pass the resulting `ReportResult` through its own output envelope.
+
+When `ReportOptions.SourceDir` is empty, the library reads the source-of-truth files embedded in this module. Set `SourceDir` only when you intentionally want to override the bundled files with an external source package.
 
 `ReportInput` accepts two evidence styles:
 
