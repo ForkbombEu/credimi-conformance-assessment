@@ -42,14 +42,14 @@ The CLI and REST API accept the same JSON shape:
 ```json
 {
   "fixture": "EUDI-iss-ver",
-  "temporal_input": {
+  "pipeline_input": {
     "name": "EUDI issuer verification"
   },
-  "temporal_output": {
+  "pipeline_output": {
     "workflow_id": "example-workflow-id",
     "run_id": "example-run-id"
   },
-  "pipeline_input": {
+  "evidence_input": {
     "discovered_steps": {},
     "extraction_summary": {},
     "credential_offers": [
@@ -81,7 +81,7 @@ The CLI and REST API accept the same JSON shape:
 }
 ```
 
-`pipeline_input` is intentionally structured by artifact type instead of mirroring a full directory tree. That shape is practical for REST payloads and keeps the extraction logic deterministic. A single huge opaque pipeline JSON object would work poorly for validation, streaming, provenance, and future partial re-processing; if payloads become large, prefer storing artifacts externally and sending references or a manifest.
+`pipeline_input` and `pipeline_output` are the Credimi pipeline request and execution result. `evidence_input` is intentionally structured by artifact type instead of mirroring a full directory tree. That shape is practical for REST payloads and keeps the extraction logic deterministic. A single huge opaque evidence JSON object would work poorly for validation, streaming, provenance, and future partial re-processing; if payloads become large, prefer storing artifacts externally and sending references or a manifest.
 
 ## Library
 
@@ -100,9 +100,9 @@ func GenerateReport() (conformance.ReportResult, error) {
 	return conformance.Generate(
 		conformance.ReportInput{
 			Fixture:        "EUDI-iss-ver",
-			TemporalInput:  json.RawMessage(`{"name":"EUDI issuer verification"}`),
-			TemporalOutput: json.RawMessage(`{"workflow_id":"wf","run_id":"run"}`),
-			PipelineOutput: json.RawMessage(`{
+			PipelineInput:  json.RawMessage(`{"name":"EUDI issuer verification"}`),
+			PipelineOutput: json.RawMessage(`{"workflow_id":"wf","run_id":"run"}`),
+			EvidenceOutput: json.RawMessage(`{
 				"credential_well_knowns": [],
 				"presentation_results": []
 			}`),
@@ -116,10 +116,12 @@ The library only generates reports. A caller that runs inside Credimi or any wor
 
 When `ReportOptions.SourceDir` is empty, the library reads the source-of-truth files embedded in this module. Set `SourceDir` only when you intentionally want to override the bundled files with an external source package.
 
-`ReportInput` accepts two evidence styles:
+`ReportInput` separates pipeline data from conformance evidence:
 
-- `pipeline_input`: grouped artifact JSON used by the existing CLI/API payloads.
-- `pipeline_output`: extracted evidence output with `credential_well_knowns` and `presentation_results`, matching the evidence structure produced by Credimi pipeline evidence extraction.
+- `pipeline_input`: Credimi pipeline request/workflow input.
+- `pipeline_output`: Credimi pipeline execution result/workflow output.
+- `evidence_input`: grouped artifact JSON used by CLI/API payloads.
+- `evidence_output`: extracted evidence output with `credential_well_knowns` and `presentation_results`, matching the evidence structure produced by Credimi pipeline evidence extraction.
 
 ## CLI Usage
 
@@ -193,8 +195,8 @@ The generator expects:
 
 - `SOURCE_DIR/credimi-flat-conformance-test-list-v1.1.md`
 - `SOURCE_DIR/credimi-conformance-aggregation-taxonomy-v1.1.yaml`
-- `temporal_input` and `temporal_output` JSON objects supplied by CLI JSON or REST body
-- `pipeline_input` JSON grouped by artifact type, or `pipeline_output` JSON with extracted evidence results
+- `pipeline_input` and `pipeline_output` JSON objects supplied by CLI JSON or REST body
+- `evidence_input` JSON grouped by artifact type, or `evidence_output` JSON with extracted evidence results
 
 Artifact groups are optional. For example, an input without credential-offer or presentation-request artifacts still produces a valid conservative report.
 
@@ -203,7 +205,7 @@ Artifact groups are optional. For example, an input without credential-offer or 
 Go code is intentionally limited to generic mechanics:
 
 - parse the flat test-list table into the atomic row vocabulary;
-- read Temporal input/output and pipeline artifact JSON;
+- read pipeline input/output and evidence artifact JSON;
 - build a normalized fact map such as `fixture.slug`,
   `workflow.temporal_input_present`, `credential_offer.exists`,
   `issuer.metadata_fetched`, and `presentation.exists`;

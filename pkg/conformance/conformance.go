@@ -12,10 +12,10 @@ import (
 // ReportInput is the stable request payload for generating conformance reports.
 type ReportInput struct {
 	Fixture        string          `json:"fixture,omitempty"`
-	TemporalInput  json.RawMessage `json:"temporal_input,omitempty"`
-	TemporalOutput json.RawMessage `json:"temporal_output,omitempty"`
 	PipelineInput  json.RawMessage `json:"pipeline_input,omitempty"`
 	PipelineOutput json.RawMessage `json:"pipeline_output,omitempty"`
+	EvidenceInput  json.RawMessage `json:"evidence_input,omitempty"`
+	EvidenceOutput json.RawMessage `json:"evidence_output,omitempty"`
 }
 
 // ReportOptions configures source material and optional filesystem output.
@@ -67,10 +67,10 @@ func toInternalOptions(input ReportInput, opts ReportOptions) assessment.Options
 		SourceDir:      opts.SourceDir,
 		OutDir:         opts.OutDir,
 		Fixture:        input.Fixture,
-		TemporalInput:  input.TemporalInput,
-		TemporalOutput: input.TemporalOutput,
 		PipelineInput:  input.PipelineInput,
 		PipelineOutput: input.PipelineOutput,
+		EvidenceInput:  input.EvidenceInput,
+		EvidenceOutput: input.EvidenceOutput,
 		FixturesDir:    opts.FixturesDir,
 		ExtractedDir:   opts.ExtractedDir,
 	}

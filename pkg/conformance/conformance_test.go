@@ -7,7 +7,7 @@ import (
 )
 
 func TestGenerateUsesPipelineOutputEvidence(t *testing.T) {
-	pipelineOutput := json.RawMessage(`{
+	evidenceOutput := json.RawMessage(`{
 		"credential_well_knowns": [
 			{
 				"step_id": "cred-step",
@@ -41,9 +41,9 @@ func TestGenerateUsesPipelineOutputEvidence(t *testing.T) {
 	res, err := Generate(
 		ReportInput{
 			Fixture:        "pipeline-output",
-			TemporalInput:  json.RawMessage(`{"name":"pipeline-output"}`),
-			TemporalOutput: json.RawMessage(`{"workflow_id":"wf","run_id":"run","output":"COMPLETED"}`),
-			PipelineOutput: pipelineOutput,
+			PipelineInput:  json.RawMessage(`{"name":"pipeline-output"}`),
+			PipelineOutput: json.RawMessage(`{"workflow_id":"wf","run_id":"run","output":"COMPLETED"}`),
+			EvidenceOutput: evidenceOutput,
 		},
 		ReportOptions{SourceDir: "../../source-of-truth"},
 	)
@@ -77,8 +77,8 @@ func TestGenerateUsesEmbeddedSourceByDefault(t *testing.T) {
 	res, err := Generate(
 		ReportInput{
 			Fixture:        "embedded-source",
-			TemporalInput:  json.RawMessage(`{"name":"embedded-source"}`),
-			TemporalOutput: json.RawMessage(`{"workflow_id":"wf","run_id":"run"}`),
+			PipelineInput:  json.RawMessage(`{"name":"embedded-source"}`),
+			PipelineOutput: json.RawMessage(`{"workflow_id":"wf","run_id":"run"}`),
 		},
 		ReportOptions{},
 	)

@@ -52,33 +52,33 @@ func Build(f fixture.Fixture) (AssessmentFacts, error) {
 
 func BuildInline(
 	name string,
-	temporalInput json.RawMessage,
-	temporalOutput json.RawMessage,
 	pipelineInput json.RawMessage,
 	pipelineOutput json.RawMessage,
+	evidenceInput json.RawMessage,
+	evidenceOutput json.RawMessage,
 ) (AssessmentFacts, error) {
 	if name == "" {
 		name = "inline-assessment"
 	}
 	af := AssessmentFacts{}
 	af.Fixture.Name, af.Fixture.Slug = name, fixture.Slug(name)
-	if hasJSON(temporalInput) {
-		applyTemporalInput(&af, temporalInput)
-	}
-	if hasJSON(temporalOutput) {
-		applyTemporalOutput(&af, temporalOutput)
-	}
 	if hasJSON(pipelineInput) {
-		if err := applyPipelineInput(&af, pipelineInput); err != nil {
-			return AssessmentFacts{}, err
-		}
-		markHashed(&af, pipelineInput)
+		applyTemporalInput(&af, pipelineInput)
 	}
 	if hasJSON(pipelineOutput) {
-		if err := applyPipelineOutput(&af, pipelineOutput); err != nil {
+		applyTemporalOutput(&af, pipelineOutput)
+	}
+	if hasJSON(evidenceInput) {
+		if err := applyEvidenceInput(&af, evidenceInput); err != nil {
 			return AssessmentFacts{}, err
 		}
-		markHashed(&af, pipelineOutput)
+		markHashed(&af, evidenceInput)
+	}
+	if hasJSON(evidenceOutput) {
+		if err := applyEvidenceOutput(&af, evidenceOutput); err != nil {
+			return AssessmentFacts{}, err
+		}
+		markHashed(&af, evidenceOutput)
 	}
 	finalize(&af)
 	return af, nil
@@ -92,7 +92,7 @@ func applyTemporalOutput(af *AssessmentFacts, b []byte) {
 	af.Workflow.TemporalOutputPresent = true
 	extractOutputFacts(af, b)
 }
-func applyPipelineInput(af *AssessmentFacts, b []byte) error {
+func applyEvidenceInput(af *AssessmentFacts, b []byte) error {
 	var m map[string]json.RawMessage
 	if err := json.Unmarshal(b, &m); err != nil {
 		return err
@@ -118,7 +118,7 @@ func applyPipelineInput(af *AssessmentFacts, b []byte) error {
 	}
 	return nil
 }
-func applyPipelineOutput(af *AssessmentFacts, b []byte) error {
+func applyEvidenceOutput(af *AssessmentFacts, b []byte) error {
 	var m map[string]json.RawMessage
 	if err := json.Unmarshal(b, &m); err != nil {
 		return err
