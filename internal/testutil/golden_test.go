@@ -15,7 +15,7 @@ import (
 func TestGeneratedAssessmentsMatchGoldenSemantics(t *testing.T) {
 	repo := filepath.Clean("../..")
 	out := t.TempDir()
-	cmd := exec.Command("go", "run", "./cmd/credimi-assess", "--source-dir", "./source-of-truth", "--fixtures-dir", "./fixtures", "--extracted-dir", "./out", "--out-dir", out)
+	cmd := exec.Command("go", "run", ".", "assess", "--source-dir", "./source-of-truth", "--fixtures-dir", "./fixtures", "--extracted-dir", "./out", "--out-dir", out)
 	cmd.Dir = repo
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr

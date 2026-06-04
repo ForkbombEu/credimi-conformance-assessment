@@ -40,8 +40,8 @@ func TestGenerateUsesPipelineOutputEvidence(t *testing.T) {
 	}`)
 	res, err := Generate(
 		ReportInput{
-			Fixture:        "activity-output",
-			TemporalInput:  json.RawMessage(`{"name":"activity-output"}`),
+			Fixture:        "pipeline-output",
+			TemporalInput:  json.RawMessage(`{"name":"pipeline-output"}`),
 			TemporalOutput: json.RawMessage(`{"workflow_id":"wf","run_id":"run","output":"COMPLETED"}`),
 			PipelineOutput: pipelineOutput,
 		},
@@ -54,7 +54,7 @@ func TestGenerateUsesPipelineOutputEvidence(t *testing.T) {
 		t.Fatalf("reports count got %d want 1", len(res.Reports))
 	}
 	rep := res.Reports[0]
-	if rep.Slug != "activity-output" {
+	if rep.Slug != "pipeline-output" {
 		t.Fatalf("slug got %q", rep.Slug)
 	}
 	if rep.Markdown == "" {
@@ -68,27 +68,5 @@ func TestGenerateUsesPipelineOutputEvidence(t *testing.T) {
 	}
 	if !strings.Contains(rep.Markdown, "Issuer metadata fetched: `true`") {
 		t.Fatalf("well-known evidence was not reflected in markdown")
-	}
-}
-
-func TestGenerateActivityWrapsReportResult(t *testing.T) {
-	res, err := GenerateActivity(ActivityInput{
-		Payload: ActivityPayload{
-			ReportInput: ReportInput{
-				Fixture:        "activity-input",
-				TemporalInput:  json.RawMessage(`{"name":"activity-input"}`),
-				TemporalOutput: json.RawMessage(`{"workflow_id":"wf","run_id":"run"}`),
-			},
-			ReportOptions: ReportOptions{SourceDir: "../../source-of-truth"},
-		},
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(res.Output.Reports) != 1 {
-		t.Fatalf("reports count got %d want 1", len(res.Output.Reports))
-	}
-	if res.Output.Reports[0].Slug != "activity-input" {
-		t.Fatalf("slug got %q", res.Output.Reports[0].Slug)
 	}
 }

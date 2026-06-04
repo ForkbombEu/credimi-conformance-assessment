@@ -1,5 +1,4 @@
-// Package conformance exposes Credimi conformance report generation for CLIs,
-// HTTP handlers, and future Temporal activities.
+// Package conformance exposes Credimi conformance report generation.
 package conformance
 
 import (
@@ -41,25 +40,6 @@ type ReportResult struct {
 	Reports []Report `json:"reports"`
 }
 
-// ActivityPayload mirrors the payload shape used by Credimi activities.
-type ActivityPayload struct {
-	ReportInput
-	ReportOptions
-}
-
-// ActivityInput mirrors credimi-2 workflowengine.ActivityInput without taking a
-// dependency on Temporal or credimi-2.
-type ActivityInput struct {
-	Payload ActivityPayload   `json:"payload,omitempty"`
-	Config  map[string]string `json:"config,omitempty"`
-}
-
-// ActivityResult mirrors credimi-2 workflowengine.ActivityResult.
-type ActivityResult struct {
-	Output ReportResult `json:"output,omitempty"`
-	Log    []string     `json:"log,omitempty"`
-}
-
 // LoadInput reads a ReportInput JSON file.
 func LoadInput(path string) (ReportInput, error) {
 	b, err := os.ReadFile(path)
@@ -80,16 +60,6 @@ func Generate(input ReportInput, opts ReportOptions) (ReportResult, error) {
 		return ReportResult{}, err
 	}
 	return fromInternalResult(res), nil
-}
-
-// GenerateActivity is a small adapter for embedding this package in a Temporal
-// activity implementation.
-func GenerateActivity(input ActivityInput) (ActivityResult, error) {
-	res, err := Generate(input.Payload.ReportInput, input.Payload.ReportOptions)
-	if err != nil {
-		return ActivityResult{}, err
-	}
-	return ActivityResult{Output: res}, nil
 }
 
 func toInternalOptions(input ReportInput, opts ReportOptions) assessment.Options {

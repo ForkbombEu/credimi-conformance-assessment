@@ -1,6 +1,6 @@
 # Credimi Conformance Assessment Generator
 
-This repository contains a thin, deterministic Go CLI and REST wrapper that generates Credimi
+This repository contains a thin, deterministic Go library, CLI, and REST wrapper that generates Credimi
 `conformance-assessment-<fixture-slug>.md` reports from Temporal evidence,
 pipeline artifacts, and the source-of-truth package.
 
@@ -79,18 +79,62 @@ The CLI and REST API accept the same JSON shape:
 
 `pipeline_input` is intentionally structured by artifact type instead of mirroring a full directory tree. That shape is practical for REST payloads and keeps the extraction logic deterministic. A single huge opaque pipeline JSON object would work poorly for validation, streaming, provenance, and future partial re-processing; if payloads become large, prefer storing artifacts externally and sending references or a manifest.
 
+## Library
+
+Use `pkg/conformance` when another Go program needs to produce the report directly:
+
+```go
+package example
+
+import (
+	"encoding/json"
+
+	"credimi-conformance-assessment/pkg/conformance"
+)
+
+func GenerateReport() (conformance.ReportResult, error) {
+	return conformance.Generate(
+		conformance.ReportInput{
+			Fixture:        "EUDI-iss-ver",
+			TemporalInput:  json.RawMessage(`{"name":"EUDI issuer verification"}`),
+			TemporalOutput: json.RawMessage(`{"workflow_id":"wf","run_id":"run"}`),
+			PipelineOutput: json.RawMessage(`{
+				"credential_well_knowns": [],
+				"presentation_results": []
+			}`),
+		},
+		conformance.ReportOptions{
+			SourceDir: "./source-of-truth",
+		},
+	)
+}
+```
+
+The library only generates reports. A caller that runs inside Credimi or any workflow runtime should wrap `conformance.Generate` in its own integration code and pass the resulting `ReportResult` through its own output envelope.
+
+`ReportInput` accepts two evidence styles:
+
+- `pipeline_input`: grouped artifact JSON used by the existing CLI/API payloads.
+- `pipeline_output`: extracted evidence output with `credential_well_knowns` and `presentation_results`, matching the evidence structure produced by Credimi pipeline evidence extraction.
+
 ## CLI Usage
+
+The repository exposes one CLI with subcommands:
+
+```bash
+go run . help
+```
 
 Generate from an input JSON file. With the default empty `OUT_DIR`, Markdown is written to stdout:
 
 ```bash
-go run ./cmd/credimi-assess --input-json ./assessment-input.json
+go run . assess --input-json ./assessment-input.json
 ```
 
 If `TEMPORAL_DATA` is set in `.env`, the CLI can use it without `--input-json`:
 
 ```bash
-go run ./cmd/credimi-assess
+go run . assess
 ```
 
 Set `OUT_DIR` in `.env` to write Markdown files and print report metadata as JSON.
@@ -98,7 +142,7 @@ Set `OUT_DIR` in `.env` to write Markdown files and print report metadata as JSO
 Legacy fixture-directory mode is still available for the checked-in sample data:
 
 ```bash
-go run ./cmd/credimi-assess \
+go run . assess \
   --fixtures-dir ./fixtures \
   --pipeline-dir ./out \
   --fixture EUDI-iss-ver
@@ -111,7 +155,7 @@ The six checked-in fixture requests are available as copy/paste curl commands in
 Start the API server:
 
 ```bash
-go run ./cmd/credimi-api
+go run . api
 ```
 
 Generate one assessment through the API. The curl examples read `API_PORT` from `.env`:
@@ -146,7 +190,7 @@ The generator expects:
 - `SOURCE_DIR/credimi-flat-conformance-test-list-v1.1.md`
 - `SOURCE_DIR/credimi-conformance-aggregation-taxonomy-v1.1.yaml`
 - `temporal_input` and `temporal_output` JSON objects supplied by CLI JSON or REST body
-- `pipeline_input` JSON grouped by artifact type
+- `pipeline_input` JSON grouped by artifact type, or `pipeline_output` JSON with extracted evidence results
 
 Artifact groups are optional. For example, an input without credential-offer or presentation-request artifacts still produces a valid conservative report.
 

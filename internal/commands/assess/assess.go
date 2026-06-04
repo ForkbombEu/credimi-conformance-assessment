@@ -1,4 +1,4 @@
-package main
+package assess
 
 import (
 	"encoding/json"
@@ -11,25 +11,24 @@ import (
 	"credimi-conformance-assessment/pkg/conformance"
 )
 
-func main() {
-	if err := run(); err != nil {
-		fmt.Fprintln(os.Stderr, "credimi-assess:", err)
-		os.Exit(1)
+// Run executes the assess CLI command.
+func Run(args []string) error {
+	fs := flag.NewFlagSet("assess", flag.ExitOnError)
+	envPath := fs.String("env", ".env", "path to .env config")
+	inputJSON := fs.String("input-json", "", "path to JSON assessment input")
+	fixtureName := fs.String("fixture", "", "fixture name for inline JSON input or legacy fixture selection")
+	fixturesDir := fs.String("fixtures-dir", "", "legacy fixture directory")
+	pipelineDir := fs.String("pipeline-dir", "", "legacy extracted pipeline artifact directory")
+	sourceDir := fs.String("source-dir", "", "legacy source-of-truth directory override")
+	extractedDir := fs.String("extracted-dir", "", "legacy extracted pipeline artifact directory")
+	outDir := fs.String("out-dir", "", "legacy output directory override")
+	if err := fs.Parse(args); err != nil {
+		return err
 	}
-}
-func run() error {
-	envPath := flag.String("env", ".env", "path to .env config")
-	inputJSON := flag.String("input-json", "", "path to JSON assessment input")
-	fixtureName := flag.String("fixture", "", "fixture name for inline JSON input or legacy fixture selection")
-	fixturesDir := flag.String("fixtures-dir", "", "legacy fixture directory")
-	pipelineDir := flag.String("pipeline-dir", "", "legacy extracted pipeline artifact directory")
-	sourceDir := flag.String("source-dir", "", "legacy source-of-truth directory override")
-	extractedDir := flag.String("extracted-dir", "", "legacy extracted pipeline artifact directory")
-	outDir := flag.String("out-dir", "", "legacy output directory override")
-	flag.Parse()
-	if len(os.Args) == 1 {
+	if len(args) == 0 {
 		fmt.Fprint(os.Stderr, cli.ASCIIArt)
 	}
+
 	cfg := config.Load(*envPath)
 	input := conformance.ReportInput{Fixture: *fixtureName}
 	opts := conformance.ReportOptions{SourceDir: cfg.SourceDir, OutDir: cfg.OutDir}
@@ -48,6 +47,7 @@ func run() error {
 	if *extractedDir != "" {
 		opts.ExtractedDir = *extractedDir
 	}
+
 	path := *inputJSON
 	if path == "" {
 		path = cfg.TemporalData
@@ -62,6 +62,7 @@ func run() error {
 		}
 		input = req
 	}
+
 	res, err := conformance.Generate(input, opts)
 	if err != nil {
 		return err
@@ -75,6 +76,7 @@ func run() error {
 		}
 		return nil
 	}
+
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("", "  ")
 	return enc.Encode(res)
