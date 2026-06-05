@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -18,9 +19,11 @@ func Build(f fixture.Fixture) (AssessmentFacts, error) {
 	af.Fixture.Name, af.Fixture.Slug = f.Name, f.Slug
 	if b, err := os.ReadFile(filepath.Join(f.Dir, "input.json")); err == nil {
 		applyTemporalInput(&af, b)
+		_ = applyEvidence(&af, b)
 	}
 	if b, err := os.ReadFile(filepath.Join(f.Dir, "output.json")); err == nil {
 		applyTemporalOutput(&af, b)
+		_ = applyEvidence(&af, b)
 	}
 	if _, err := os.Stat(filepath.Join(f.ExtractedDir, "discovered-steps.json")); err == nil {
 		af.Evidence.StepArtifactsPresent = true
@@ -40,6 +43,10 @@ func Build(f fixture.Fixture) (AssessmentFacts, error) {
 			mergeIssuer(&af, readWellKnown(path))
 		case "request-uri-output.json":
 			af.Presentations = append(af.Presentations, readPresentation(path))
+		case "credential_offers.json", "credential-offers.json", "credential_well_knowns.json", "credential-well-knowns.json", "presentation_results.json", "presentation-results.json":
+			if b, e := os.ReadFile(path); e == nil {
+				_ = applyEvidence(&af, b)
+			}
 		}
 		if strings.HasSuffix(base, ".json") {
 			if b, e := os.ReadFile(path); e == nil {
@@ -92,19 +99,40 @@ func applyTemporalInput(af *AssessmentFacts, b []byte) {
 		af.Wallet.RanOnPhysicalAndroid = true
 	}
 	extractConformanceInputFacts(af, s)
+	applyWorkflowDefinition(af, b)
 }
 func applyTemporalOutput(af *AssessmentFacts, b []byte) {
 	af.Workflow.TemporalOutputPresent = true
 	extractOutputFacts(af, b)
+	applyPipelineOutput(af, b)
 }
 func applyEvidence(af *AssessmentFacts, b []byte) error {
 	var m map[string]json.RawMessage
 	if err := json.Unmarshal(b, &m); err != nil {
-		return err
+		var items []json.RawMessage
+		if err := json.Unmarshal(b, &items); err != nil {
+			return err
+		}
+		for _, item := range items {
+			if err := applyEvidence(af, item); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	if hasJSON(m["payload"]) {
+		if err := applyEvidence(af, m["payload"]); err != nil {
+			return err
+		}
+	}
+	if hasJSON(m["evidence"]) {
+		if err := applyEvidence(af, m["evidence"]); err != nil {
+			return err
+		}
 	}
 	used := false
 	for _, raw := range rawArray(m, "credential_offers") {
-		af.CredentialOffers = append(af.CredentialOffers, readCredentialOfferEvidenceBytes(raw))
+		af.CredentialOffers = appendCredentialOffer(af.CredentialOffers, readCredentialOfferEvidenceBytes(raw))
 		used = true
 	}
 	for _, raw := range rawArray(m, "credential_offer_resolution_chains") {
@@ -113,11 +141,11 @@ func applyEvidence(af *AssessmentFacts, b []byte) error {
 			return err
 		}
 		if hasJSON(item["CredentialOffer"]) {
-			af.CredentialOffers = append(af.CredentialOffers, readOfferBytes(item["CredentialOffer"]))
+			af.CredentialOffers = appendCredentialOffer(af.CredentialOffers, readOfferBytes(item["CredentialOffer"]))
 			used = true
 		}
 		if hasJSON(item["credential_offer"]) {
-			af.CredentialOffers = append(af.CredentialOffers, readOfferBytes(item["credential_offer"]))
+			af.CredentialOffers = appendCredentialOffer(af.CredentialOffers, readOfferBytes(item["credential_offer"]))
 			used = true
 		}
 		if hasJSON(item["IssuerMetadata"]) {
@@ -209,14 +237,336 @@ func finalize(af *AssessmentFacts) {
 			af.Issuer.OfferedConfigurationPresent = true
 		}
 	}
-	if len(af.CredentialOffers) > 0 {
+	buildAttempts(af)
+	if len(af.IssuanceAttempts) > 0 {
+		af.Wallet.IssuanceFlowCompleted = anyAttemptStatus(af.IssuanceAttempts, "succeeded")
+	} else if len(af.CredentialOffers) > 0 {
 		af.Wallet.IssuanceFlowCompleted = af.Workflow.TemporalOutputPresent && af.Workflow.HasCompletedSteps && af.Wallet.NoVisibleError
 	}
-	if len(af.Presentations) > 0 {
+	if len(af.PresentationAttempts) > 0 {
+		af.Wallet.PresentationFlowCompleted = anyAttemptStatus(af.PresentationAttempts, "succeeded")
+		af.Wallet.PresentationShareCompleted = af.Wallet.PresentationFlowCompleted
+	} else if len(af.Presentations) > 0 {
 		af.Wallet.PresentationFlowCompleted = af.Workflow.TemporalOutputPresent && af.Workflow.HasCompletedSteps && af.Wallet.NoVisibleError
 		af.Wallet.PresentationShareCompleted = af.Wallet.PresentationFlowCompleted
 	}
 }
+func applyWorkflowDefinition(af *AssessmentFacts, b []byte) {
+	root := asMap(parseJSON(b))
+	if payload := asMap(root["payload"]); len(payload) > 0 {
+		root = payload
+	}
+	wf := asMap(root["workflow_definition"])
+	if len(wf) == 0 {
+		wf = root
+	}
+	if name := stringValue(wf, "name"); name != "" {
+		af.Workflow.Name = name
+	}
+	for _, raw := range anySlice(wf["steps"]) {
+		m := asMap(raw)
+		step := StepFacts{ID: stringValue(m, "id"), Use: stringValue(m, "use")}
+		with := asMap(m["with"])
+		payload := asMap(with["payload"])
+		step.ActionID = firstNonEmpty(stringValue(with, "action_id"), stringValue(payload, "action_id"))
+		step.CredentialID = firstNonEmpty(stringValue(with, "credential_id"), stringValue(payload, "credential_id"))
+		step.UseCaseID = firstNonEmpty(stringValue(with, "use_case_id"), stringValue(payload, "use_case_id"))
+		step.References = referencedStepIDs(raw)
+		if step.ID != "" {
+			upsertStep(af, step)
+		}
+	}
+}
+
+func applyPipelineOutput(af *AssessmentFacts, b []byte) {
+	root := asMap(parseJSON(b))
+	if payload := asMap(root["payload"]); len(payload) > 0 {
+		root = payload
+	}
+	if po := asMap(root["pipeline_output"]); len(po) > 0 {
+		applyPipelineOutputMap(af, po, "pipeline_output")
+	}
+	failed := failureStepID(root)
+	if failed != "" {
+		markStepStatus(af, failed, "failed", "explicit_failure", false, true)
+	}
+	if details := failureDetailsMap(root); len(details) > 0 {
+		applyPipelineOutputMap(af, details, "failure_details")
+	}
+}
+
+func applyPipelineOutputMap(af *AssessmentFacts, m map[string]any, source string) {
+	for id, raw := range m {
+		item := asMap(raw)
+		if len(item) == 0 {
+			continue
+		}
+		outputs, ok := item["outputs"]
+		if !ok {
+			continue
+		}
+		empty := isEmptyOutput(outputs)
+		status := "succeeded"
+		statusSource := source
+		if empty && stepUse(af, id) == "mobile-automation" {
+			status = "failed"
+			statusSource = "empty_outputs"
+		}
+		markStepStatus(af, id, status, statusSource, true, empty)
+		if s, ok := outputs.(string); ok {
+			if co, ok := credentialOfferFromDeeplink(s); ok {
+				co.StepID = id
+				af.CredentialOffers = appendCredentialOffer(af.CredentialOffers, co)
+			}
+			if strings.Contains(s, "request_uri=") {
+				p := readPresentationBytes([]byte(s))
+				p.StepID = id
+				af.Presentations = appendPresentation(af.Presentations, p)
+			}
+		}
+	}
+}
+
+func credentialOfferFromDeeplink(s string) (CredentialOfferFacts, bool) {
+	u, err := url.Parse(strings.TrimSpace(s))
+	if err != nil {
+		return CredentialOfferFacts{}, false
+	}
+	offer := u.Query().Get("credential_offer")
+	if offer == "" {
+		return CredentialOfferFacts{}, false
+	}
+	return readOfferBytes([]byte(offer)), true
+}
+
+func failureStepID(root map[string]any) string {
+	failure := asMap(root["failure"])
+	for _, m := range []map[string]any{failure, asMap(failure["cause"])} {
+		app := asMap(m["applicationFailureInfo"])
+		details := asMap(app["details"])
+		payloads := anySlice(details["payloads"])
+		if len(payloads) > 0 {
+			if s := toString(payloads[0]); s != "" {
+				return s
+			}
+			if nested := anySlice(payloads[0]); len(nested) > 0 {
+				if s := toString(nested[0]); s != "" {
+					return s
+				}
+			}
+		}
+	}
+	return ""
+}
+
+func failureDetailsMap(root map[string]any) map[string]any {
+	failure := asMap(root["failure"])
+	for _, m := range []map[string]any{asMap(failure["cause"]), failure} {
+		app := asMap(m["applicationFailureInfo"])
+		details := asMap(app["details"])
+		payloads := anySlice(details["payloads"])
+		if len(payloads) > 1 {
+			return asMap(payloads[1])
+		}
+	}
+	return nil
+}
+
+func buildAttempts(af *AssessmentFacts) {
+	for _, co := range af.CredentialOffers {
+		if co.StepID == "" {
+			continue
+		}
+		consumer := consumerFor(af.Steps, co.StepID, "mobile-automation")
+		if consumer.ID == "" || consumer.Status == "" {
+			continue
+		}
+		af.IssuanceAttempts = append(af.IssuanceAttempts, AttemptFacts{ProducerStepID: co.StepID, ConsumerStepID: consumer.ID, ConsumerStatus: consumer.Status, ConsumerStatusSource: consumer.StatusSource, Profile: co.Profile, Format: co.Format, GrantType: co.GrantType, IssuerURL: co.IssuerURL, IsPID: co.IsPID, IsSDJWT: co.IsSDJWT, IsMdoc: co.IsMdoc})
+	}
+	for _, producer := range af.Steps {
+		if producer.Use != "use-case-verification-deeplink" {
+			continue
+		}
+		consumer := consumerFor(af.Steps, producer.ID, "mobile-automation")
+		if consumer.ID == "" || consumer.Status == "" {
+			continue
+		}
+		text := strings.ToLower(producer.ID + " " + producer.UseCaseID + " " + producer.ActionID)
+		af.PresentationAttempts = append(af.PresentationAttempts, AttemptFacts{ProducerStepID: producer.ID, ConsumerStepID: consumer.ID, ConsumerStatus: consumer.Status, ConsumerStatusSource: consumer.StatusSource, Format: formatFromText(text), IsSDJWT: strings.Contains(text, "sd-jwt"), IsMdoc: strings.Contains(text, "mdoc"), IsOpenID4VP: true})
+	}
+}
+
+func consumerFor(steps []StepFacts, producerID, use string) StepFacts {
+	producerIndex := -1
+	for i, step := range steps {
+		if step.ID == producerID {
+			producerIndex = i
+		}
+		if step.Use == use && stringIn(producerID, step.References) {
+			return step
+		}
+	}
+	if producerIndex >= 0 {
+		for _, step := range steps[producerIndex+1:] {
+			if step.Use == use {
+				return step
+			}
+			if step.Use == "credential-offer" || step.Use == "use-case-verification-deeplink" {
+				break
+			}
+		}
+	}
+	return StepFacts{}
+}
+
+func anyAttemptStatus(attempts []AttemptFacts, status string) bool {
+	for _, attempt := range attempts {
+		if attempt.ConsumerStatus == status {
+			return true
+		}
+	}
+	return false
+}
+
+func upsertStep(af *AssessmentFacts, step StepFacts) {
+	for i := range af.Steps {
+		if af.Steps[i].ID == step.ID {
+			old := af.Steps[i]
+			if step.Use != "" {
+				old.Use = step.Use
+			}
+			if step.ActionID != "" {
+				old.ActionID = step.ActionID
+			}
+			if step.CredentialID != "" {
+				old.CredentialID = step.CredentialID
+			}
+			if step.UseCaseID != "" {
+				old.UseCaseID = step.UseCaseID
+			}
+			if len(step.References) > 0 {
+				old.References = appendUnique(old.References, step.References...)
+			}
+			af.Steps[i] = old
+			return
+		}
+	}
+	af.Steps = append(af.Steps, step)
+}
+
+func markStepStatus(af *AssessmentFacts, id, status, source string, outputPresent, outputEmpty bool) {
+	upsertStep(af, StepFacts{ID: id})
+	for i := range af.Steps {
+		if af.Steps[i].ID == id {
+			if status != "" {
+				af.Steps[i].Status = status
+			}
+			if source != "" {
+				af.Steps[i].StatusSource = source
+			}
+			af.Steps[i].OutputPresent = af.Steps[i].OutputPresent || outputPresent
+			af.Steps[i].OutputEmpty = outputEmpty
+			af.Steps[i].OutputNonEmpty = outputPresent && !outputEmpty
+			return
+		}
+	}
+}
+
+func stepUse(af *AssessmentFacts, id string) string {
+	for _, step := range af.Steps {
+		if step.ID == id {
+			return step.Use
+		}
+	}
+	return ""
+}
+
+func referencedStepIDs(v any) []string {
+	var values []string
+	collectStrings(v, &values)
+	var out []string
+	for _, value := range values {
+		for {
+			start := strings.Index(value, "${{")
+			if start < 0 {
+				break
+			}
+			rest := value[start+3:]
+			end := strings.Index(rest, ".outputs")
+			if end < 0 {
+				break
+			}
+			out = appendUnique(out, strings.TrimSpace(rest[:end]))
+			value = rest[end+len(".outputs"):]
+		}
+	}
+	return out
+}
+
+func collectStrings(v any, out *[]string) {
+	switch x := v.(type) {
+	case string:
+		*out = append(*out, x)
+	case []any:
+		for _, item := range x {
+			collectStrings(item, out)
+		}
+	case map[string]any:
+		for _, item := range x {
+			collectStrings(item, out)
+		}
+	}
+}
+
+func isEmptyOutput(v any) bool {
+	switch x := v.(type) {
+	case nil:
+		return true
+	case string:
+		return strings.TrimSpace(x) == ""
+	case []any:
+		return len(x) == 0
+	case map[string]any:
+		return len(x) == 0
+	default:
+		return false
+	}
+}
+
+func formatFromText(s string) string {
+	if strings.Contains(s, "mdoc") {
+		return "MDOC"
+	}
+	if strings.Contains(s, "sd-jwt") {
+		return "SD_JWT"
+	}
+	return ""
+}
+
+func appendCredentialOffer(items []CredentialOfferFacts, co CredentialOfferFacts) []CredentialOfferFacts {
+	for _, item := range items {
+		if item.StepID != "" && item.StepID == co.StepID {
+			return items
+		}
+	}
+	return append(items, co)
+}
+
+func appendPresentation(items []PresentationFacts, p PresentationFacts) []PresentationFacts {
+	for _, item := range items {
+		if item.StepID != "" && item.StepID == p.StepID {
+			return items
+		}
+	}
+	return append(items, p)
+}
+
+func stringFromRaw(raw json.RawMessage) string {
+	var s string
+	_ = json.Unmarshal(raw, &s)
+	return s
+}
+
 func selectedCredentialConfiguration(co CredentialOfferFacts, configs []CredentialConfigurationFacts) (CredentialConfigurationFacts, bool) {
 	for _, cfg := range configs {
 		if cfg.ID == co.ConfigurationID {
@@ -313,7 +663,9 @@ func readOffer(path string) CredentialOfferFacts { b, _ := os.ReadFile(path); re
 func readCredentialOfferEvidenceBytes(b []byte) CredentialOfferFacts {
 	var item map[string]json.RawMessage
 	if err := json.Unmarshal(b, &item); err == nil && hasJSON(item["credential_offer"]) {
-		return readOfferBytes(item["credential_offer"])
+		co := readOfferBytes(item["credential_offer"])
+		co.StepID = stringFromRaw(item["step_id"])
+		return co
 	}
 	return readOfferBytes(b)
 }

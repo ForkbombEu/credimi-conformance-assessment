@@ -2618,8 +2618,8 @@ assessment_rules:
     strength: definitive
     when:
       all:
-        - fact: credential_offer.grant_type
-          equals: authorization_code
+        - fact: credential_offer.has_authorization_code
+          equals: true
         - fact: wallet.issuance_flow_completed
           equals: true
   - rule_id: realtime-wallet-pre-auth-code
@@ -2628,8 +2628,8 @@ assessment_rules:
     strength: definitive
     when:
       all:
-        - fact: credential_offer.grant_type
-          equals: urn:ietf:params:oauth:grant-type:pre-authorized_code
+        - fact: credential_offer.has_pre_authorized_code
+          equals: true
         - fact: wallet.issuance_flow_completed
           equals: true
   - rule_id: realtime-wallet-pid-sd-jwt
@@ -2858,16 +2858,16 @@ assessment_rules:
     strength: definitive
     when:
       all:
-        - fact: credential_offer.grant_type
-          equals: authorization_code
+        - fact: credential_offer.has_authorization_code
+          equals: true
   - rule_id: realtime-issuer-pre-authorized-code
     test_id: 78
     result_text: "PASSED - real-time credential offer used pre-authorized_code grant"
     strength: definitive
     when:
       all:
-        - fact: credential_offer.grant_type
-          equals: urn:ietf:params:oauth:grant-type:pre-authorized_code
+        - fact: credential_offer.has_pre_authorized_code
+          equals: true
   - rule_id: realtime-issuer-issued-to-wallet
     test_id: 80
     result_text: "PASSED - real-time credential offer evidence and Temporal output show Wallet issuance completed"
@@ -2967,4 +2967,150 @@ assessment_rules:
     when:
       all:
         - fact: conformance.webuild_wallet_checks_completed
+          equals: true
+
+  - rule_id: realtime-wallet-pid-offer-failed
+    test_id: 1
+    result_text: "FAILED - PID credential offer was present, but the consuming Wallet automation step failed before issuance completed"
+    result_status: failed
+    strength: definitive
+    when:
+      all:
+        - fact: issuance.failed_pid
+          equals: true
+  - rule_id: realtime-wallet-auth-code-failed
+    test_id: 4
+    result_text: "FAILED - authorization_code credential offer was consumed by Wallet automation, but issuance did not complete"
+    result_status: failed
+    strength: definitive
+    when:
+      all:
+        - fact: issuance.failed_authorization_code
+          equals: true
+  - rule_id: realtime-wallet-pre-auth-code-failed
+    test_id: 5
+    result_text: "FAILED - pre-authorized_code credential offer was consumed by Wallet automation, but issuance did not complete"
+    result_status: failed
+    strength: definitive
+    when:
+      all:
+        - fact: issuance.failed_pre_authorized_code
+          equals: true
+  - rule_id: realtime-wallet-pid-sd-jwt-failed
+    test_id: 6
+    result_text: "FAILED - PID SD-JWT credential offer was consumed by Wallet automation, but issuance did not complete"
+    result_status: failed
+    strength: definitive
+    when:
+      all:
+        - fact: issuance.failed_pid_sd_jwt
+          equals: true
+  - rule_id: realtime-wallet-pid-mdoc-failed
+    test_id: 7
+    result_text: "FAILED - PID mdoc credential offer was consumed by Wallet automation, but issuance did not complete"
+    result_status: failed
+    strength: definitive
+    when:
+      all:
+        - fact: issuance.failed_pid_mdoc
+          equals: true
+  - rule_id: realtime-wallet-es256-issuance-failed
+    test_id: 11
+    result_text: "FAILED - issuer metadata advertised ES256, but the consuming Wallet issuance automation failed"
+    result_status: failed
+    strength: definitive
+    when:
+      all:
+        - fact: issuance.failed
+          equals: true
+        - fact: issuer.metadata_advertises_es256
+          equals: true
+  - rule_id: realtime-wallet-eddsa-issuance-failed
+    test_id: 12
+    result_text: "FAILED - issuer metadata advertised EdDSA, but the consuming Wallet issuance automation failed"
+    result_status: failed
+    strength: definitive
+    when:
+      all:
+        - fact: issuance.failed
+          equals: true
+        - fact: issuer.metadata_advertises_eddsa
+          equals: true
+  - rule_id: realtime-wallet-x5c-issuer-binding-failed
+    test_id: 13
+    result_text: "FAILED - issuer metadata contained x5c material, but the consuming Wallet issuance automation failed"
+    result_status: failed
+    strength: definitive
+    when:
+      all:
+        - fact: issuance.failed
+          equals: true
+        - fact: issuer.metadata_has_x5c
+          equals: true
+  - rule_id: realtime-wallet-jwk-binding-failed
+    test_id: 14
+    result_text: "FAILED - issuer metadata advertised JWK binding, but the consuming Wallet issuance automation failed"
+    result_status: failed
+    strength: definitive
+    when:
+      all:
+        - fact: issuance.failed
+          equals: true
+        - fact: issuer.metadata_advertises_jwk_binding
+          equals: true
+  - rule_id: realtime-wallet-did-binding-failed
+    test_id: 15
+    result_text: "FAILED - issuer metadata advertised DID binding, but the consuming Wallet issuance automation failed"
+    result_status: failed
+    strength: definitive
+    when:
+      all:
+        - fact: issuance.failed
+          equals: true
+        - fact: issuer.metadata_advertises_did_binding
+          equals: true
+  - rule_id: realtime-issuer-issued-to-wallet-failed
+    test_id: 80
+    result_text: "FAILED - credential offer evidence exists, but the Wallet did not complete the consuming issuance flow"
+    result_status: failed
+    strength: definitive
+    when:
+      all:
+        - fact: issuance.failed_pid
+          equals: true
+  - rule_id: realtime-wallet-presentation-request-failed
+    test_id: 28
+    result_text: "FAILED - presentation request was produced, but the consuming Wallet automation failed before presentation completed"
+    result_status: failed
+    strength: definitive
+    when:
+      all:
+        - fact: presentation.failed
+          equals: true
+  - rule_id: realtime-wallet-openid4vp-request-failed
+    test_id: 29
+    result_text: "FAILED - OpenID4VP presentation request was consumed by Wallet automation, but presentation did not complete"
+    result_status: failed
+    strength: definitive
+    when:
+      all:
+        - fact: presentation.failed_openid4vp
+          equals: true
+  - rule_id: realtime-wallet-same-device-presentation-failed
+    test_id: 30
+    result_text: "FAILED - same-device presentation request was consumed by Wallet automation, but presentation did not complete"
+    result_status: failed
+    strength: definitive
+    when:
+      all:
+        - fact: presentation.failed_openid4vp
+          equals: true
+  - rule_id: realtime-wallet-share-failed
+    test_id: 37
+    result_text: "FAILED - Wallet presentation share flow was attempted, but the consuming automation failed"
+    result_status: failed
+    strength: definitive
+    when:
+      all:
+        - fact: presentation.failed_openid4vp
           equals: true

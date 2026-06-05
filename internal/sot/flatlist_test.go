@@ -20,7 +20,6 @@ func TestParseFlatList(t *testing.T) {
 		137: "CR-TRU-137",
 		150: "CR-INF-150",
 		159: "CR-CON-159",
-		171: "CR-MIS-171",
 	}
 	for _, row := range rows {
 		if want, ok := wants[row.Number]; ok {

@@ -112,7 +112,7 @@ func renderReports(opts Options, src *sot.Source, afs []facts.AssessmentFacts) (
 	for _, af := range afs {
 		evaluated := rules.Evaluate(src.Taxonomy, af)
 		md := report.Render(af, src.FlatTests, evaluated)
-		rep := Report{Fixture: af.Fixture.Name, Slug: af.Fixture.Slug, PassedCount: len(evaluated)}
+		rep := Report{Fixture: af.Fixture.Name, Slug: af.Fixture.Slug, PassedCount: rules.PassedCount(evaluated)}
 		if opts.OutDir == "" {
 			rep.Markdown = md
 		} else {

@@ -20,8 +20,12 @@ func Evaluate(t Taxonomy, af facts.AssessmentFacts) map[int]Result {
 			if !ok {
 				continue
 			}
-			if old, exists := res[r.TestID]; !exists || r.RuleID < old.RuleID {
-				res[r.TestID] = Result{TestID: r.TestID, Text: txt, RuleID: r.RuleID, Strength: r.Strength}
+			status := r.ResultStatus
+			if status == "" {
+				status = "passed"
+			}
+			if shouldReplace(res[r.TestID], res[r.TestID].TestID != 0, status, r.RuleID) {
+				res[r.TestID] = Result{TestID: r.TestID, Text: txt, RuleID: r.RuleID, Strength: r.Strength, Status: status}
 			}
 		}
 	}
@@ -45,9 +49,13 @@ func FlattenFacts(af facts.AssessmentFacts) map[string]any {
 	if len(af.CredentialOffers) > 0 {
 		co := af.CredentialOffers[0]
 		m["credential_offer.grant_type"] = co.GrantType
-		m["credential_offer.is_pid"] = co.IsPID
-		m["credential_offer.is_sd_jwt"] = co.IsSDJWT
-		m["credential_offer.is_mdoc"] = co.IsMdoc
+		m["credential_offer.is_pid"] = anyCredentialOffer(af.CredentialOffers, func(co facts.CredentialOfferFacts) bool { return co.IsPID })
+		m["credential_offer.is_sd_jwt"] = anyCredentialOffer(af.CredentialOffers, func(co facts.CredentialOfferFacts) bool { return co.IsSDJWT })
+		m["credential_offer.is_mdoc"] = anyCredentialOffer(af.CredentialOffers, func(co facts.CredentialOfferFacts) bool { return co.IsMdoc })
+		m["credential_offer.has_authorization_code"] = anyCredentialOffer(af.CredentialOffers, func(co facts.CredentialOfferFacts) bool { return co.GrantType == "authorization_code" })
+		m["credential_offer.has_pre_authorized_code"] = anyCredentialOffer(af.CredentialOffers, func(co facts.CredentialOfferFacts) bool {
+			return co.GrantType == "urn:ietf:params:oauth:grant-type:pre-authorized_code"
+		})
 		m["credential.configuration_id"] = co.ConfigurationID
 		m["credential.issuer_url"] = co.IssuerURL
 	}
@@ -69,6 +77,8 @@ func FlattenFacts(af facts.AssessmentFacts) map[string]any {
 	m["wallet.presentation_share_completed"] = af.Wallet.PresentationShareCompleted
 	m["wallet.no_visible_error"] = af.Wallet.NoVisibleError
 	m["wallet.ran_on_physical_android"] = af.Wallet.RanOnPhysicalAndroid
+	addAttemptFacts(m, "issuance", af.IssuanceAttempts)
+	addAttemptFacts(m, "presentation", af.PresentationAttempts)
 	m["issuer.metadata_fetched"] = af.Issuer.MetadataFetched
 	m["issuer.metadata_format"] = af.Issuer.MetadataFormat
 	m["issuer.metadata_advertises_pid"] = af.Issuer.MetadataAdvertisesPID
@@ -87,6 +97,69 @@ func FlattenFacts(af facts.AssessmentFacts) map[string]any {
 	m["conformance.webuild_wallet_check_count"] = af.Conformance.WEBuildWalletCheckCount
 	return m
 }
+func anyCredentialOffer(offers []facts.CredentialOfferFacts, fn func(facts.CredentialOfferFacts) bool) bool {
+	for _, offer := range offers {
+		if fn(offer) {
+			return true
+		}
+	}
+	return false
+}
+
+func shouldReplace(old Result, exists bool, status, ruleID string) bool {
+	if !exists {
+		return true
+	}
+	if old.Status == "failed" && status == "passed" {
+		return true
+	}
+	if old.Status == "passed" && status == "failed" {
+		return false
+	}
+	return ruleID < old.RuleID
+}
+
+func addAttemptFacts(m map[string]any, prefix string, attempts []facts.AttemptFacts) {
+	m[prefix+".attempt_count"] = len(attempts)
+	for _, attempt := range attempts {
+		status := attempt.ConsumerStatus
+		if status == "" {
+			continue
+		}
+		setBool(m, prefix+"."+status, true)
+		if attempt.IsPID {
+			setBool(m, prefix+"."+status+"_pid", true)
+		}
+		if attempt.IsSDJWT {
+			setBool(m, prefix+"."+status+"_sd_jwt", true)
+		}
+		if attempt.IsMdoc {
+			setBool(m, prefix+"."+status+"_mdoc", true)
+		}
+		if attempt.IsPID && attempt.IsSDJWT {
+			setBool(m, prefix+"."+status+"_pid_sd_jwt", true)
+		}
+		if attempt.IsPID && attempt.IsMdoc {
+			setBool(m, prefix+"."+status+"_pid_mdoc", true)
+		}
+		if attempt.GrantType == "authorization_code" {
+			setBool(m, prefix+"."+status+"_authorization_code", true)
+		}
+		if attempt.GrantType == "urn:ietf:params:oauth:grant-type:pre-authorized_code" {
+			setBool(m, prefix+"."+status+"_pre_authorized_code", true)
+		}
+		if attempt.IsOpenID4VP {
+			setBool(m, prefix+"."+status+"_openid4vp", true)
+		}
+	}
+}
+
+func setBool(m map[string]any, key string, value bool) {
+	if value {
+		m[key] = true
+	}
+}
+
 func evalCond(c Condition, m map[string]any) bool {
 	if len(c.All) > 0 {
 		for _, x := range c.All {
@@ -196,4 +269,14 @@ func SortedResults(m map[int]Result) []Result {
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].TestID < out[j].TestID })
 	return out
+}
+
+func PassedCount(m map[int]Result) int {
+	count := 0
+	for _, result := range m {
+		if result.Status != "failed" {
+			count++
+		}
+	}
+	return count
 }
