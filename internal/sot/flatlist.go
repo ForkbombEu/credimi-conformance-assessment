@@ -11,6 +11,7 @@ import (
 
 type FlatTest struct {
 	Number               int
+	ID                   string
 	Actor                string
 	Test                 string
 	EvidenceStrength     string
@@ -51,7 +52,7 @@ func ParseFlatListReader(name string, r io.Reader) ([]FlatTest, error) {
 			return nil, fmt.Errorf("duplicate flat test number %d", n)
 		}
 		seen[n] = true
-		rows = append(rows, FlatTest{Number: n, Actor: cells[1], Test: cells[2], EvidenceStrength: cells[3], RecommendedExecution: cells[4], SourceReferences: cells[5], Notes: cells[6]})
+		rows = append(rows, FlatTest{Number: n, ID: flatTestID(n), Actor: cells[1], Test: cells[2], EvidenceStrength: cells[3], RecommendedExecution: cells[4], SourceReferences: cells[5], Notes: cells[6]})
 	}
 	if err := s.Err(); err != nil {
 		return nil, err
@@ -60,6 +61,10 @@ func ParseFlatListReader(name string, r io.Reader) ([]FlatTest, error) {
 		return nil, fmt.Errorf("no flat conformance rows parsed from %s", name)
 	}
 	return rows, nil
+}
+
+func flatTestID(number int) string {
+	return fmt.Sprintf("CR-I-%03d", number)
 }
 
 func splitMarkdownRow(line string) []string {

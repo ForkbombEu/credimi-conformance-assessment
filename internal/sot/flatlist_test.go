@@ -10,7 +10,7 @@ func TestParseFlatList(t *testing.T) {
 	if len(rows) < 150 {
 		t.Fatalf("expected at least 150 rows, got %d", len(rows))
 	}
-	if rows[0].Number != 1 || rows[0].Actor == "" || rows[0].SourceReferences == "" {
+	if rows[0].Number != 1 || rows[0].ID != "CR-I-001" || rows[0].Actor == "" || rows[0].SourceReferences == "" {
 		t.Fatalf("unexpected first row: %#v", rows[0])
 	}
 }
