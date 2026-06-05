@@ -1,0 +1,1194 @@
+{
+  "workflow_definition": {
+    "name": "Paradym - get PID Bundesdruckerei",
+    "runtime": {
+      "schedule": {},
+      "global_runner_id": "forkbomb-bv-andrea/pixel6-android16-a1",
+      "temporal": {
+        "activity_options": {
+          "schedule_to_close_timeout": "20m",
+          "start_to_close_timeout": "20m",
+          "retry_policy": {
+            "maximum_attempts": 3
+          }
+        }
+      }
+    },
+    "steps": [
+      {
+        "id": "install-from-playstore-0001",
+        "use": "mobile-external-install",
+        "with": {
+          "config": {
+            "app_url": "https://credimi.io/",
+            "taskqueue": "forkbomb-bv-andrea/pixel6-android16-a1-TaskQueue"
+          },
+          "payload": {
+            "action_code": "appId: com.android.vending\n---\n- openLink: \"market://details?id=id.paradym.wallet\"\n- assertVisible: Install\n- tapOn: Install\n- tapOn: Open\n#",
+            "action_id": "findynet-cooperative/paradym-wallet/install-from-playstore",
+            "runner_id": "forkbomb-bv-andrea/pixel6-android16-a1",
+            "serial": "1B171FDF6008G7",
+            "stored_action_code": true,
+            "type": "android_phone",
+            "version_id": "installed_from_external_source"
+          }
+        },
+        "metadata": {
+          "mobile_special_install": true
+        }
+      },
+      {
+        "id": "onboarding-0002",
+        "use": "mobile-automation",
+        "with": {
+          "config": {
+            "app_url": "https://credimi.io/",
+            "taskqueue": "forkbomb-bv-andrea/pixel6-android16-a1-TaskQueue"
+          },
+          "payload": {
+            "action_code": "appId: id.paradym.wallet\n---\n- launchApp:\n    clearState: true\n- tapOn: Get Started\n- tapOn: \"1\"\n- tapOn: \"2\"\n- tapOn: \"3\"\n- tapOn: \"4\"\n- tapOn: \"5\"\n- tapOn: \"6\"\n- tapOn: \"1\"\n- tapOn: \"2\"\n- tapOn: \"3\"\n- tapOn: \"4\"\n- tapOn: \"5\"\n- tapOn: \"6\"\n- tapOn: Set up later\n- tapOn: Go to wallet\n",
+            "action_id": "findynet-cooperative/paradym-wallet/onboarding",
+            "runner_id": "forkbomb-bv-andrea/pixel6-android16-a1",
+            "serial": "1B171FDF6008G7",
+            "stored_action_code": true,
+            "type": "android_phone",
+            "version_id": "installed_from_external_source"
+          }
+        }
+      },
+      {
+        "id": "animo-bundesdruckerei-pid-issuer-0003",
+        "use": "credential-offer",
+        "with": {
+          "payload": {
+            "credential_id": "forkbomb-bv-andrea/misc-issuer-integration-demo/animo-bundesdruckerei-pid-issuer"
+          }
+        }
+      },
+      {
+        "id": "get-bundesdruckerei-pid-0004",
+        "use": "mobile-automation",
+        "with": {
+          "config": {
+            "app_url": "https://credimi.io/",
+            "taskqueue": "forkbomb-bv-andrea/pixel6-android16-a1-TaskQueue"
+          },
+          "payload": {
+            "action_code": "appId: id.paradym.wallet\n---\n- launchApp\n- tapOn: \"1\"\n- tapOn: \"2\"\n- tapOn: \"3\"\n- tapOn: \"4\"\n- tapOn: \"5\"\n- tapOn: \"6\"\n## In general the Wallet seems not handle redirects well, at least not on Android\n## We resorted to letting click the deeplink in the browser directly\n## Below all the failed experiments:\n# Bundesdruckerei and Paradym issuer return a 404, maybe because the credential offer can be used only once\n# - openLink: https://credimi.io/api/credential/deeplink?id=forkbomb-bv-andrea/misc-issuer-integration-demo/findynet-paradym-test-issuer&redirect=true\n# - openLink: https://credimi.io/api/credential/deeplink?id=forkbomb-bv-andrea/misc-issuer-integration-demo/animo-bundesdruckerei-pid-issuer&redirect=true\n# Sphereon is broken also by scanning\n# - openLink: https://credimi.io/api/credential/deeplink?id=forkbomb-bv-andrea/misc-issuer-integration-demo/findynet-sphereon-issuer&redirect=true\n# EUDIW links do not redirect, presumably because Paradym has not registered haip-vci://\n#- openLink: https://credimi.io/api/credential/deeplink?id=forkbomb-bv-andrea/misc-issuer-integration-demo/eudiw-pid-mdoc-haip-vci&redirect=true\n#- openLink: https://credimi.io/api/credential/deeplink?id=forkbomb-bv-andrea/misc-issuer-integration-demo/eudiw-pid-pid-vc-sd-jwt-haip-vci&redirect=true\n- openLink: https://credimi.io/marketplace/credentials/forkbomb-bv-andrea/misc-issuer-integration-demo/animo-bundesdruckerei-pid-issuer#qr_code\n- tapOn:\n    text: \"openid-credential-offer://\\\\?credential_offer_uri=.*\"\n- runFlow:\n    when:\n      visible: \"1\"\n    commands:\n      - tapOn: \"1\"\n      - tapOn: \"2\"\n      - tapOn: \"3\"\n      - tapOn: \"4\"\n      - tapOn: \"5\"\n      - tapOn: \"6\"\n- tapOn: Yes, continue\n- tapOn: Continue\n- tapOn: Accept\n \n ",
+            "action_id": "findynet-cooperative/paradym-wallet/get-bundesdruckerei-pid",
+            "runner_id": "forkbomb-bv-andrea/pixel6-android16-a1",
+            "serial": "1B171FDF6008G7",
+            "stored_action_code": true,
+            "type": "android_phone",
+            "version_id": "installed_from_external_source"
+          }
+        }
+      }
+    ],
+    "finally": {}
+  },
+  "pipeline_output": {
+    "animo-bundesdruckerei-pid-issuer-0003": {
+      "outputs": "openid-credential-offer://?credential_offer_uri=https%3A%2F%2Ffunke.animo.id%2Foid4vci%2F188e2459-6da8-4431-9062-2fcdac274f41%2Foffers%2Fe8bf4d0f-16af-4a7b-aff2-80430262a096"
+    },
+    "get-bundesdruckerei-pid-0004": {
+      "outputs": {}
+    },
+    "install-from-playstore-0001": {
+      "outputs": {
+        "flow_output": {
+          "mobile_flow": "Running on 1B171FDF6008G7\n > Flow action\nOpen market://details?id=id.paradym.wallet... COMPLETED\nAssert that \"Install\" is visible... COMPLETED\nTap on \"Install\"... COMPLETED\nTap on \"Open\"... COMPLETED\n",
+          "post_install": {
+            "maestro_launch_output": "Running on 1B171FDF6008G7\n > Flow launch3542376927\nLaunch app \"id.paradym.wallet\"... COMPLETED\n--- stderr ---\nPicked up JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8\nPicked up JAVA_TOOL_OPTIONS: -Dfile.encoding=UTF-8",
+            "message": "APK post-install checks completed on device 1B171FDF6008G7",
+            "package_id": "id.paradym.wallet",
+            "post_launch_readiness_output": "attempt 1: foreground=\"id.paradym.wallet\" target=true transient=false ui_dump=true dump_contains_app=true stable=1 transients=0\n  mCurrentFocus: mCurrentFocus=Window{52d8ed u0 id.paradym.wallet/id.paradym.wallet.MainActivity}\n  mFocusedApp: mFocusedApp=ActivityRecord{23466847 u0 id.paradym.wallet/.MainActivity t2971}\n  ui dump: <?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy rotation=\"0\"><node index=\"0\" text=\"\" resource-id=\"\" class=\"android.widget.FrameLayout\" package=\"id.paradym.wallet\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickabl...\nattempt 2: foreground=\"id.paradym.wallet\" target=true transient=false ui_dump=true dump_contains_app=true stable=2 transients=0\n  mCurrentFocus: mCurrentFocus=Window{52d8ed u0 id.paradym.wallet/id.paradym.wallet.MainActivity}\n  mFocusedApp: mFocusedApp=ActivityRecord{23466847 u0 id.paradym.wallet/.MainActivity t2971}\n  ui dump: <?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy rotation=\"0\"><node index=\"0\" text=\"\" resource-id=\"\" class=\"android.widget.FrameLayout\" package=\"id.paradym.wallet\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickabl...\nattempt 3: foreground=\"id.paradym.wallet\" target=true transient=false ui_dump=true dump_contains_app=true stable=3 transients=0\n  mCurrentFocus: mCurrentFocus=Window{52d8ed u0 id.paradym.wallet/id.paradym.wallet.MainActivity}\n  mFocusedApp: mFocusedApp=ActivityRecord{23466847 u0 id.paradym.wallet/.MainActivity t2971}\n  ui dump: <?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy rotation=\"0\"><node index=\"0\" text=\"\" resource-id=\"\" class=\"android.widget.FrameLayout\" package=\"id.paradym.wallet\" content-desc=\"\" checkable=\"false\" checked=\"false\" clickabl...\nstatus: foreground and UI dump checks passed.\nfinal result: [READY]"
+          }
+        },
+        "test_run_url": "https://credimi.io/my/tests/runs/Pipeline-paradym-get-pid-bundesdruckerei-e4353e7e-c259-44c6-a59b-395fba946ee0-install-from-playstore-0001/019e9815-ed79-75f7-bc8c-03289b5188e0"
+      }
+    },
+    "onboarding-0002": {
+      "outputs": {
+        "flow_output": "Running on 1B171FDF6008G7\n > Flow action\nLaunch app \"id.paradym.wallet\" with clear state... COMPLETED\nTap on \"Get Started\"... COMPLETED\nTap on \"1\"... COMPLETED\nTap on \"2\"... COMPLETED\nTap on \"3\"... COMPLETED\nTap on \"4\"... COMPLETED\nTap on \"5\"... COMPLETED\nTap on \"6\"... COMPLETED\nTap on \"1\"... COMPLETED\nTap on \"2\"... COMPLETED\nTap on \"3\"... COMPLETED\nTap on \"4\"... COMPLETED\nTap on \"5\"... COMPLETED\nTap on \"6\"... COMPLETED\nTap on \"Set up later\"... COMPLETED\nTap on \"Go to wallet\"... COMPLETED\n",
+        "test_run_url": "https://credimi.io/my/tests/runs/Pipeline-paradym-get-pid-bundesdruckerei-e4353e7e-c259-44c6-a59b-395fba946ee0-onboarding-0002/019e9817-3023-73af-bd59-f353ef8922de"
+      }
+    },
+    "result_video_warning": "Video recordings are limited to 30 minutes. Tests exceeding this duration may result in an incomplete video.",
+    "workflow-id": "Pipeline-paradym-get-pid-bundesdruckerei-e4353e7e-c259-44c6-a59b-395fba946ee0",
+    "workflow-run-id": "019e9815-dd77-790e-a8bd-98ed9f18c60f"
+  },
+  "evidence": {
+    "credential_offers": [
+      {
+        "credential_id": "forkbomb-bv-andrea/misc-issuer-integration-demo/animo-bundesdruckerei-pid-issuer",
+        "credential_offer": {
+          "credential_configuration_ids": [
+            "arf-pid-sd-jwt"
+          ],
+          "credential_issuer": "https://funke.animo.id/oid4vci/188e2459-6da8-4431-9062-2fcdac274f41",
+          "grants": {
+            "urn:ietf:params:oauth:grant-type:pre-authorized_code": {
+              "authorization_server": "https://funke.animo.id/oid4vci/188e2459-6da8-4431-9062-2fcdac274f41",
+              "pre-authorized_code": "619146683354896442522247"
+            }
+          }
+        },
+        "step_id": "animo-bundesdruckerei-pid-issuer-0003"
+      }
+    ],
+    "credential_well_knowns": [
+      {
+        "credential_id": "forkbomb-bv-andrea/misc-issuer-integration-demo/animo-bundesdruckerei-pid-issuer",
+        "fetch": {
+          "content_type": "application/json; charset=utf-8",
+          "fetched_at": "2026-06-05T14:00:33Z",
+          "format": "json",
+          "http_status": 200,
+          "sha256": "8ba4634a7ad86ce3bd4c840eff48cc9b506b443d9a15b2b9279bd8908e5a599b",
+          "url": "https://funke.animo.id/oid4vci/188e2459-6da8-4431-9062-2fcdac274f41/.well-known/openid-credential-issuer"
+        },
+        "step_id": "animo-bundesdruckerei-pid-issuer-0003",
+        "well_known": {
+          "authorization_server": "https://funke.animo.id/provider",
+          "authorization_servers": [
+            "https://funke.animo.id/provider",
+            "https://funke.animo.id/oid4vci/188e2459-6da8-4431-9062-2fcdac274f41"
+          ],
+          "batch_credential_issuance": {
+            "batch_size": 10
+          },
+          "credential_configurations_supported": {
+            "arf-pid-sd-jwt": {
+              "cryptographic_binding_methods_supported": [
+                "jwk"
+              ],
+              "cryptographic_suites_supported": [
+                "ES256"
+              ],
+              "display": [
+                {
+                  "background_color": "#F1F2F0",
+                  "background_image": {
+                    "uri": "https://funke.animo.id/assets/issuers/bdr/pid-credential.png",
+                    "url": "https://funke.animo.id/assets/issuers/bdr/pid-credential.png"
+                  },
+                  "locale": "en",
+                  "name": "PID (ARF)",
+                  "text_color": "#2F3544"
+                }
+              ],
+              "format": "vc+sd-jwt",
+              "proof_types_supported": {
+                "jwt": {
+                  "proof_signing_alg_values_supported": [
+                    "ES256"
+                  ]
+                }
+              },
+              "scope": "arf-pid-sd-jwt",
+              "vct": "eu.europa.ec.eudi.pid.1"
+            },
+            "arf-pid-sd-jwt-dc-sd-jwt": {
+              "cryptographic_binding_methods_supported": [
+                "jwk"
+              ],
+              "cryptographic_suites_supported": [
+                "ES256"
+              ],
+              "display": [
+                {
+                  "background_color": "#F1F2F0",
+                  "background_image": {
+                    "uri": "https://funke.animo.id/assets/issuers/bdr/pid-credential.png",
+                    "url": "https://funke.animo.id/assets/issuers/bdr/pid-credential.png"
+                  },
+                  "locale": "en",
+                  "name": "PID (ARF)",
+                  "text_color": "#2F3544"
+                }
+              ],
+              "format": "dc+sd-jwt",
+              "proof_types_supported": {
+                "jwt": {
+                  "proof_signing_alg_values_supported": [
+                    "ES256"
+                  ]
+                }
+              },
+              "scope": "arf-pid-sd-jwt",
+              "vct": "eu.europa.ec.eudi.pid.1"
+            },
+            "arf-pid-sd-jwt-dc-sd-jwt-key-attestations": {
+              "cryptographic_binding_methods_supported": [
+                "jwk"
+              ],
+              "cryptographic_suites_supported": [
+                "ES256"
+              ],
+              "display": [
+                {
+                  "background_color": "#F1F2F0",
+                  "background_image": {
+                    "uri": "https://funke.animo.id/assets/issuers/bdr/pid-credential.png",
+                    "url": "https://funke.animo.id/assets/issuers/bdr/pid-credential.png"
+                  },
+                  "locale": "en",
+                  "name": "PID (ARF)",
+                  "text_color": "#2F3544"
+                }
+              ],
+              "format": "dc+sd-jwt",
+              "proof_types_supported": {
+                "attestation": {
+                  "key_attestations_required": {
+                    "key_storage": [
+                      "iso_18045_high"
+                    ],
+                    "user_authentication": [
+                      "iso_18045_high"
+                    ]
+                  },
+                  "proof_signing_alg_values_supported": [
+                    "ES256"
+                  ]
+                },
+                "jwt": {
+                  "key_attestations_required": {
+                    "key_storage": [
+                      "iso_18045_high"
+                    ],
+                    "user_authentication": [
+                      "iso_18045_high"
+                    ]
+                  },
+                  "proof_signing_alg_values_supported": [
+                    "ES256"
+                  ]
+                }
+              },
+              "scope": "arf-pid-sd-jwt",
+              "vct": "eu.europa.ec.eudi.pid.1"
+            },
+            "arf-pid-sd-jwt-key-attestations": {
+              "cryptographic_binding_methods_supported": [
+                "jwk"
+              ],
+              "cryptographic_suites_supported": [
+                "ES256"
+              ],
+              "display": [
+                {
+                  "background_color": "#F1F2F0",
+                  "background_image": {
+                    "uri": "https://funke.animo.id/assets/issuers/bdr/pid-credential.png",
+                    "url": "https://funke.animo.id/assets/issuers/bdr/pid-credential.png"
+                  },
+                  "locale": "en",
+                  "name": "PID (ARF)",
+                  "text_color": "#2F3544"
+                }
+              ],
+              "format": "vc+sd-jwt",
+              "proof_types_supported": {
+                "attestation": {
+                  "key_attestations_required": {
+                    "key_storage": [
+                      "iso_18045_high"
+                    ],
+                    "user_authentication": [
+                      "iso_18045_high"
+                    ]
+                  },
+                  "proof_signing_alg_values_supported": [
+                    "ES256"
+                  ]
+                },
+                "jwt": {
+                  "key_attestations_required": {
+                    "key_storage": [
+                      "iso_18045_high"
+                    ],
+                    "user_authentication": [
+                      "iso_18045_high"
+                    ]
+                  },
+                  "proof_signing_alg_values_supported": [
+                    "ES256"
+                  ]
+                }
+              },
+              "scope": "arf-pid-sd-jwt",
+              "vct": "eu.europa.ec.eudi.pid.1"
+            },
+            "arf-pid-sd-jwt-urn-vct": {
+              "cryptographic_binding_methods_supported": [
+                "jwk"
+              ],
+              "cryptographic_suites_supported": [
+                "ES256"
+              ],
+              "display": [
+                {
+                  "background_color": "#F1F2F0",
+                  "background_image": {
+                    "uri": "https://funke.animo.id/assets/issuers/bdr/pid-credential.png",
+                    "url": "https://funke.animo.id/assets/issuers/bdr/pid-credential.png"
+                  },
+                  "locale": "en",
+                  "name": "PID (ARF, urn: vct)",
+                  "text_color": "#2F3544"
+                }
+              ],
+              "format": "vc+sd-jwt",
+              "proof_types_supported": {
+                "jwt": {
+                  "proof_signing_alg_values_supported": [
+                    "ES256"
+                  ]
+                }
+              },
+              "scope": "arf-pid-sd-jwt-urn-vct",
+              "vct": "urn:eu.europa.ec.eudi:pid:1"
+            },
+            "arf-pid-sd-jwt-urn-vct-dc-sd-jwt": {
+              "cryptographic_binding_methods_supported": [
+                "jwk"
+              ],
+              "cryptographic_suites_supported": [
+                "ES256"
+              ],
+              "display": [
+                {
+                  "background_color": "#F1F2F0",
+                  "background_image": {
+                    "uri": "https://funke.animo.id/assets/issuers/bdr/pid-credential.png",
+                    "url": "https://funke.animo.id/assets/issuers/bdr/pid-credential.png"
+                  },
+                  "locale": "en",
+                  "name": "PID (ARF, urn: vct)",
+                  "text_color": "#2F3544"
+                }
+              ],
+              "format": "dc+sd-jwt",
+              "proof_types_supported": {
+                "jwt": {
+                  "proof_signing_alg_values_supported": [
+                    "ES256"
+                  ]
+                }
+              },
+              "scope": "arf-pid-sd-jwt-urn-vct",
+              "vct": "urn:eu.europa.ec.eudi:pid:1"
+            },
+            "arf-pid-sd-jwt-urn-vct-dc-sd-jwt-key-attestations": {
+              "cryptographic_binding_methods_supported": [
+                "jwk"
+              ],
+              "cryptographic_suites_supported": [
+                "ES256"
+              ],
+              "display": [
+                {
+                  "background_color": "#F1F2F0",
+                  "background_image": {
+                    "uri": "https://funke.animo.id/assets/issuers/bdr/pid-credential.png",
+                    "url": "https://funke.animo.id/assets/issuers/bdr/pid-credential.png"
+                  },
+                  "locale": "en",
+                  "name": "PID (ARF, urn: vct)",
+                  "text_color": "#2F3544"
+                }
+              ],
+              "format": "dc+sd-jwt",
+              "proof_types_supported": {
+                "attestation": {
+                  "key_attestations_required": {
+                    "key_storage": [
+                      "iso_18045_high"
+                    ],
+                    "user_authentication": [
+                      "iso_18045_high"
+                    ]
+                  },
+                  "proof_signing_alg_values_supported": [
+                    "ES256"
+                  ]
+                },
+                "jwt": {
+                  "key_attestations_required": {
+                    "key_storage": [
+                      "iso_18045_high"
+                    ],
+                    "user_authentication": [
+                      "iso_18045_high"
+                    ]
+                  },
+                  "proof_signing_alg_values_supported": [
+                    "ES256"
+                  ]
+                }
+              },
+              "scope": "arf-pid-sd-jwt-urn-vct",
+              "vct": "urn:eu.europa.ec.eudi:pid:1"
+            },
+            "arf-pid-sd-jwt-urn-vct-key-attestations": {
+              "cryptographic_binding_methods_supported": [
+                "jwk"
+              ],
+              "cryptographic_suites_supported": [
+                "ES256"
+              ],
+              "display": [
+                {
+                  "background_color": "#F1F2F0",
+                  "background_image": {
+                    "uri": "https://funke.animo.id/assets/issuers/bdr/pid-credential.png",
+                    "url": "https://funke.animo.id/assets/issuers/bdr/pid-credential.png"
+                  },
+                  "locale": "en",
+                  "name": "PID (ARF, urn: vct)",
+                  "text_color": "#2F3544"
+                }
+              ],
+              "format": "vc+sd-jwt",
+              "proof_types_supported": {
+                "attestation": {
+                  "key_attestations_required": {
+                    "key_storage": [
+                      "iso_18045_high"
+                    ],
+                    "user_authentication": [
+                      "iso_18045_high"
+                    ]
+                  },
+                  "proof_signing_alg_values_supported": [
+                    "ES256"
+                  ]
+                },
+                "jwt": {
+                  "key_attestations_required": {
+                    "key_storage": [
+                      "iso_18045_high"
+                    ],
+                    "user_authentication": [
+                      "iso_18045_high"
+                    ]
+                  },
+                  "proof_signing_alg_values_supported": [
+                    "ES256"
+                  ]
+                }
+              },
+              "scope": "arf-pid-sd-jwt-urn-vct",
+              "vct": "urn:eu.europa.ec.eudi:pid:1"
+            },
+            "mobile-drivers-license-ldp-vc": {
+              "credential_definition": {
+                "@context": [
+                  "https://www.w3.org/2018/credentials/v1",
+                  "https://w3id.org/vdl/v2"
+                ],
+                "type": [
+                  "VerifiableCredential",
+                  "Iso18013DriversLicenseCredential"
+                ]
+              },
+              "cryptographic_binding_methods_supported": [
+                "did:jwk"
+              ],
+              "cryptographic_suites_supported": [
+                "ES256"
+              ],
+              "display": [
+                {
+                  "background_color": "#E6E2E7",
+                  "background_image": {
+                    "uri": "https://funke.animo.id/assets/issuers/bdr/credential.png",
+                    "url": "https://funke.animo.id/assets/issuers/bdr/credential.png"
+                  },
+                  "locale": "en",
+                  "name": "Drivers Licence",
+                  "text_color": "#6F5C77"
+                }
+              ],
+              "format": "ldp_vc",
+              "proof_types_supported": {
+                "jwt": {
+                  "proof_signing_alg_values_supported": [
+                    "EdDSA",
+                    "Ed25519Signature2020"
+                  ]
+                }
+              },
+              "scope": "mobile-drivers-license-ldp-vc"
+            },
+            "mobile-drivers-license-ldp-vc-key-attestations": {
+              "credential_definition": {
+                "@context": [
+                  "https://www.w3.org/2018/credentials/v1",
+                  "https://w3id.org/vdl/v2"
+                ],
+                "type": [
+                  "VerifiableCredential",
+                  "Iso18013DriversLicenseCredential"
+                ]
+              },
+              "cryptographic_binding_methods_supported": [
+                "did:jwk"
+              ],
+              "cryptographic_suites_supported": [
+                "ES256"
+              ],
+              "display": [
+                {
+                  "background_color": "#E6E2E7",
+                  "background_image": {
+                    "uri": "https://funke.animo.id/assets/issuers/bdr/credential.png",
+                    "url": "https://funke.animo.id/assets/issuers/bdr/credential.png"
+                  },
+                  "locale": "en",
+                  "name": "Drivers Licence",
+                  "text_color": "#6F5C77"
+                }
+              ],
+              "format": "ldp_vc",
+              "proof_types_supported": {},
+              "scope": "mobile-drivers-license-ldp-vc"
+            },
+            "mobile-drivers-license-mdoc": {
+              "cryptographic_binding_methods_supported": [
+                "cose_key"
+              ],
+              "cryptographic_suites_supported": [
+                "ES256"
+              ],
+              "display": [
+                {
+                  "background_color": "#E6E2E7",
+                  "background_image": {
+                    "uri": "https://funke.animo.id/assets/issuers/bdr/credential.png",
+                    "url": "https://funke.animo.id/assets/issuers/bdr/credential.png"
+                  },
+                  "locale": "en",
+                  "name": "Drivers Licence",
+                  "text_color": "#6F5C77"
+                }
+              ],
+              "doctype": "org.iso.18013.5.1.mDL",
+              "format": "mso_mdoc",
+              "proof_types_supported": {
+                "jwt": {
+                  "proof_signing_alg_values_supported": [
+                    "ES256"
+                  ]
+                }
+              },
+              "scope": "mobile-drivers-license-mdoc"
+            },
+            "mobile-drivers-license-mdoc-key-attestations": {
+              "cryptographic_binding_methods_supported": [
+                "cose_key"
+              ],
+              "cryptographic_suites_supported": [
+                "ES256"
+              ],
+              "display": [
+                {
+                  "background_color": "#E6E2E7",
+                  "background_image": {
+                    "uri": "https://funke.animo.id/assets/issuers/bdr/credential.png",
+                    "url": "https://funke.animo.id/assets/issuers/bdr/credential.png"
+                  },
+                  "locale": "en",
+                  "name": "Drivers Licence",
+                  "text_color": "#6F5C77"
+                }
+              ],
+              "doctype": "org.iso.18013.5.1.mDL",
+              "format": "mso_mdoc",
+              "proof_types_supported": {
+                "attestation": {
+                  "key_attestations_required": {
+                    "key_storage": [
+                      "iso_18045_high"
+                    ],
+                    "user_authentication": [
+                      "iso_18045_high"
+                    ]
+                  },
+                  "proof_signing_alg_values_supported": [
+                    "ES256"
+                  ]
+                },
+                "jwt": {
+                  "key_attestations_required": {
+                    "key_storage": [
+                      "iso_18045_high"
+                    ],
+                    "user_authentication": [
+                      "iso_18045_high"
+                    ]
+                  },
+                  "proof_signing_alg_values_supported": [
+                    "ES256"
+                  ]
+                }
+              },
+              "scope": "mobile-drivers-license-mdoc"
+            },
+            "mobile-drivers-license-sd-jwt": {
+              "cryptographic_binding_methods_supported": [
+                "jwk"
+              ],
+              "cryptographic_suites_supported": [
+                "ES256"
+              ],
+              "display": [
+                {
+                  "background_color": "#E6E2E7",
+                  "background_image": {
+                    "uri": "https://funke.animo.id/assets/issuers/bdr/credential.png",
+                    "url": "https://funke.animo.id/assets/issuers/bdr/credential.png"
+                  },
+                  "locale": "en",
+                  "name": "Drivers Licence",
+                  "text_color": "#6F5C77"
+                }
+              ],
+              "format": "vc+sd-jwt",
+              "proof_types_supported": {
+                "jwt": {
+                  "proof_signing_alg_values_supported": [
+                    "ES256"
+                  ]
+                }
+              },
+              "scope": "mobile-drivers-license-sd-jwt",
+              "vct": "https://example.eudi.ec.europa.eu/mdl/1"
+            },
+            "mobile-drivers-license-sd-jwt-dc-sd-jwt": {
+              "cryptographic_binding_methods_supported": [
+                "jwk"
+              ],
+              "cryptographic_suites_supported": [
+                "ES256"
+              ],
+              "display": [
+                {
+                  "background_color": "#E6E2E7",
+                  "background_image": {
+                    "uri": "https://funke.animo.id/assets/issuers/bdr/credential.png",
+                    "url": "https://funke.animo.id/assets/issuers/bdr/credential.png"
+                  },
+                  "locale": "en",
+                  "name": "Drivers Licence",
+                  "text_color": "#6F5C77"
+                }
+              ],
+              "format": "dc+sd-jwt",
+              "proof_types_supported": {
+                "jwt": {
+                  "proof_signing_alg_values_supported": [
+                    "ES256"
+                  ]
+                }
+              },
+              "scope": "mobile-drivers-license-sd-jwt",
+              "vct": "https://example.eudi.ec.europa.eu/mdl/1"
+            },
+            "mobile-drivers-license-sd-jwt-dc-sd-jwt-key-attestations": {
+              "cryptographic_binding_methods_supported": [
+                "jwk"
+              ],
+              "cryptographic_suites_supported": [
+                "ES256"
+              ],
+              "display": [
+                {
+                  "background_color": "#E6E2E7",
+                  "background_image": {
+                    "uri": "https://funke.animo.id/assets/issuers/bdr/credential.png",
+                    "url": "https://funke.animo.id/assets/issuers/bdr/credential.png"
+                  },
+                  "locale": "en",
+                  "name": "Drivers Licence",
+                  "text_color": "#6F5C77"
+                }
+              ],
+              "format": "dc+sd-jwt",
+              "proof_types_supported": {
+                "attestation": {
+                  "key_attestations_required": {
+                    "key_storage": [
+                      "iso_18045_high"
+                    ],
+                    "user_authentication": [
+                      "iso_18045_high"
+                    ]
+                  },
+                  "proof_signing_alg_values_supported": [
+                    "ES256"
+                  ]
+                },
+                "jwt": {
+                  "key_attestations_required": {
+                    "key_storage": [
+                      "iso_18045_high"
+                    ],
+                    "user_authentication": [
+                      "iso_18045_high"
+                    ]
+                  },
+                  "proof_signing_alg_values_supported": [
+                    "ES256"
+                  ]
+                }
+              },
+              "scope": "mobile-drivers-license-sd-jwt",
+              "vct": "https://example.eudi.ec.europa.eu/mdl/1"
+            },
+            "mobile-drivers-license-sd-jwt-key-attestations": {
+              "cryptographic_binding_methods_supported": [
+                "jwk"
+              ],
+              "cryptographic_suites_supported": [
+                "ES256"
+              ],
+              "display": [
+                {
+                  "background_color": "#E6E2E7",
+                  "background_image": {
+                    "uri": "https://funke.animo.id/assets/issuers/bdr/credential.png",
+                    "url": "https://funke.animo.id/assets/issuers/bdr/credential.png"
+                  },
+                  "locale": "en",
+                  "name": "Drivers Licence",
+                  "text_color": "#6F5C77"
+                }
+              ],
+              "format": "vc+sd-jwt",
+              "proof_types_supported": {
+                "attestation": {
+                  "key_attestations_required": {
+                    "key_storage": [
+                      "iso_18045_high"
+                    ],
+                    "user_authentication": [
+                      "iso_18045_high"
+                    ]
+                  },
+                  "proof_signing_alg_values_supported": [
+                    "ES256"
+                  ]
+                },
+                "jwt": {
+                  "key_attestations_required": {
+                    "key_storage": [
+                      "iso_18045_high"
+                    ],
+                    "user_authentication": [
+                      "iso_18045_high"
+                    ]
+                  },
+                  "proof_signing_alg_values_supported": [
+                    "ES256"
+                  ]
+                }
+              },
+              "scope": "mobile-drivers-license-sd-jwt",
+              "vct": "https://example.eudi.ec.europa.eu/mdl/1"
+            }
+          },
+          "credential_endpoint": "https://funke.animo.id/oid4vci/188e2459-6da8-4431-9062-2fcdac274f41/credential",
+          "credential_issuer": "https://funke.animo.id/oid4vci/188e2459-6da8-4431-9062-2fcdac274f41",
+          "credentials_supported": [
+            {
+              "cryptographic_binding_methods_supported": [
+                "jwk"
+              ],
+              "cryptographic_suites_supported": [
+                "ES256"
+              ],
+              "display": [
+                {
+                  "background_color": "#E6E2E7",
+                  "locale": "en",
+                  "logo": {
+                    "url": "https://funke.animo.id/assets/issuers/bdr/credential.png"
+                  },
+                  "name": "Drivers Licence",
+                  "text_color": "#6F5C77"
+                }
+              ],
+              "format": "vc+sd-jwt",
+              "id": "mobile-drivers-license-sd-jwt",
+              "vct": "https://example.eudi.ec.europa.eu/mdl/1"
+            },
+            {
+              "cryptographic_binding_methods_supported": [
+                "jwk"
+              ],
+              "cryptographic_suites_supported": [
+                "ES256"
+              ],
+              "display": [
+                {
+                  "background_color": "#E6E2E7",
+                  "locale": "en",
+                  "logo": {
+                    "url": "https://funke.animo.id/assets/issuers/bdr/credential.png"
+                  },
+                  "name": "Drivers Licence",
+                  "text_color": "#6F5C77"
+                }
+              ],
+              "format": "vc+sd-jwt",
+              "id": "mobile-drivers-license-sd-jwt-key-attestations",
+              "vct": "https://example.eudi.ec.europa.eu/mdl/1"
+            },
+            {
+              "cryptographic_binding_methods_supported": [
+                "jwk"
+              ],
+              "cryptographic_suites_supported": [
+                "ES256"
+              ],
+              "display": [
+                {
+                  "background_color": "#E6E2E7",
+                  "locale": "en",
+                  "logo": {
+                    "url": "https://funke.animo.id/assets/issuers/bdr/credential.png"
+                  },
+                  "name": "Drivers Licence",
+                  "text_color": "#6F5C77"
+                }
+              ],
+              "format": "dc+sd-jwt",
+              "id": "mobile-drivers-license-sd-jwt-dc-sd-jwt",
+              "vct": "https://example.eudi.ec.europa.eu/mdl/1"
+            },
+            {
+              "cryptographic_binding_methods_supported": [
+                "jwk"
+              ],
+              "cryptographic_suites_supported": [
+                "ES256"
+              ],
+              "display": [
+                {
+                  "background_color": "#E6E2E7",
+                  "locale": "en",
+                  "logo": {
+                    "url": "https://funke.animo.id/assets/issuers/bdr/credential.png"
+                  },
+                  "name": "Drivers Licence",
+                  "text_color": "#6F5C77"
+                }
+              ],
+              "format": "dc+sd-jwt",
+              "id": "mobile-drivers-license-sd-jwt-dc-sd-jwt-key-attestations",
+              "vct": "https://example.eudi.ec.europa.eu/mdl/1"
+            },
+            {
+              "cryptographic_binding_methods_supported": [
+                "cose_key"
+              ],
+              "cryptographic_suites_supported": [
+                "ES256"
+              ],
+              "display": [
+                {
+                  "background_color": "#E6E2E7",
+                  "locale": "en",
+                  "logo": {
+                    "url": "https://funke.animo.id/assets/issuers/bdr/credential.png"
+                  },
+                  "name": "Drivers Licence",
+                  "text_color": "#6F5C77"
+                }
+              ],
+              "doctype": "org.iso.18013.5.1.mDL",
+              "format": "mso_mdoc",
+              "id": "mobile-drivers-license-mdoc"
+            },
+            {
+              "cryptographic_binding_methods_supported": [
+                "cose_key"
+              ],
+              "cryptographic_suites_supported": [
+                "ES256"
+              ],
+              "display": [
+                {
+                  "background_color": "#E6E2E7",
+                  "locale": "en",
+                  "logo": {
+                    "url": "https://funke.animo.id/assets/issuers/bdr/credential.png"
+                  },
+                  "name": "Drivers Licence",
+                  "text_color": "#6F5C77"
+                }
+              ],
+              "doctype": "org.iso.18013.5.1.mDL",
+              "format": "mso_mdoc",
+              "id": "mobile-drivers-license-mdoc-key-attestations"
+            },
+            {
+              "@context": [
+                "https://www.w3.org/2018/credentials/v1",
+                "https://w3id.org/vdl/v2"
+              ],
+              "cryptographic_binding_methods_supported": [
+                "did:jwk"
+              ],
+              "cryptographic_suites_supported": [
+                "ES256"
+              ],
+              "display": [
+                {
+                  "background_color": "#E6E2E7",
+                  "locale": "en",
+                  "logo": {
+                    "url": "https://funke.animo.id/assets/issuers/bdr/credential.png"
+                  },
+                  "name": "Drivers Licence",
+                  "text_color": "#6F5C77"
+                }
+              ],
+              "format": "ldp_vc",
+              "id": "mobile-drivers-license-ldp-vc",
+              "types": [
+                "VerifiableCredential",
+                "Iso18013DriversLicenseCredential"
+              ]
+            },
+            {
+              "@context": [
+                "https://www.w3.org/2018/credentials/v1",
+                "https://w3id.org/vdl/v2"
+              ],
+              "cryptographic_binding_methods_supported": [
+                "did:jwk"
+              ],
+              "cryptographic_suites_supported": [
+                "ES256"
+              ],
+              "display": [
+                {
+                  "background_color": "#E6E2E7",
+                  "locale": "en",
+                  "logo": {
+                    "url": "https://funke.animo.id/assets/issuers/bdr/credential.png"
+                  },
+                  "name": "Drivers Licence",
+                  "text_color": "#6F5C77"
+                }
+              ],
+              "format": "ldp_vc",
+              "id": "mobile-drivers-license-ldp-vc-key-attestations",
+              "types": [
+                "VerifiableCredential",
+                "Iso18013DriversLicenseCredential"
+              ]
+            },
+            {
+              "cryptographic_binding_methods_supported": [
+                "jwk"
+              ],
+              "cryptographic_suites_supported": [
+                "ES256"
+              ],
+              "display": [
+                {
+                  "background_color": "#F1F2F0",
+                  "locale": "en",
+                  "logo": {
+                    "url": "https://funke.animo.id/assets/issuers/bdr/pid-credential.png"
+                  },
+                  "name": "PID (ARF)",
+                  "text_color": "#2F3544"
+                }
+              ],
+              "format": "vc+sd-jwt",
+              "id": "arf-pid-sd-jwt",
+              "vct": "eu.europa.ec.eudi.pid.1"
+            },
+            {
+              "cryptographic_binding_methods_supported": [
+                "jwk"
+              ],
+              "cryptographic_suites_supported": [
+                "ES256"
+              ],
+              "display": [
+                {
+                  "background_color": "#F1F2F0",
+                  "locale": "en",
+                  "logo": {
+                    "url": "https://funke.animo.id/assets/issuers/bdr/pid-credential.png"
+                  },
+                  "name": "PID (ARF)",
+                  "text_color": "#2F3544"
+                }
+              ],
+              "format": "vc+sd-jwt",
+              "id": "arf-pid-sd-jwt-key-attestations",
+              "vct": "eu.europa.ec.eudi.pid.1"
+            },
+            {
+              "cryptographic_binding_methods_supported": [
+                "jwk"
+              ],
+              "cryptographic_suites_supported": [
+                "ES256"
+              ],
+              "display": [
+                {
+                  "background_color": "#F1F2F0",
+                  "locale": "en",
+                  "logo": {
+                    "url": "https://funke.animo.id/assets/issuers/bdr/pid-credential.png"
+                  },
+                  "name": "PID (ARF)",
+                  "text_color": "#2F3544"
+                }
+              ],
+              "format": "dc+sd-jwt",
+              "id": "arf-pid-sd-jwt-dc-sd-jwt",
+              "vct": "eu.europa.ec.eudi.pid.1"
+            },
+            {
+              "cryptographic_binding_methods_supported": [
+                "jwk"
+              ],
+              "cryptographic_suites_supported": [
+                "ES256"
+              ],
+              "display": [
+                {
+                  "background_color": "#F1F2F0",
+                  "locale": "en",
+                  "logo": {
+                    "url": "https://funke.animo.id/assets/issuers/bdr/pid-credential.png"
+                  },
+                  "name": "PID (ARF)",
+                  "text_color": "#2F3544"
+                }
+              ],
+              "format": "dc+sd-jwt",
+              "id": "arf-pid-sd-jwt-dc-sd-jwt-key-attestations",
+              "vct": "eu.europa.ec.eudi.pid.1"
+            },
+            {
+              "cryptographic_binding_methods_supported": [
+                "jwk"
+              ],
+              "cryptographic_suites_supported": [
+                "ES256"
+              ],
+              "display": [
+                {
+                  "background_color": "#F1F2F0",
+                  "locale": "en",
+                  "logo": {
+                    "url": "https://funke.animo.id/assets/issuers/bdr/pid-credential.png"
+                  },
+                  "name": "PID (ARF, urn: vct)",
+                  "text_color": "#2F3544"
+                }
+              ],
+              "format": "vc+sd-jwt",
+              "id": "arf-pid-sd-jwt-urn-vct",
+              "vct": "urn:eu.europa.ec.eudi:pid:1"
+            },
+            {
+              "cryptographic_binding_methods_supported": [
+                "jwk"
+              ],
+              "cryptographic_suites_supported": [
+                "ES256"
+              ],
+              "display": [
+                {
+                  "background_color": "#F1F2F0",
+                  "locale": "en",
+                  "logo": {
+                    "url": "https://funke.animo.id/assets/issuers/bdr/pid-credential.png"
+                  },
+                  "name": "PID (ARF, urn: vct)",
+                  "text_color": "#2F3544"
+                }
+              ],
+              "format": "vc+sd-jwt",
+              "id": "arf-pid-sd-jwt-urn-vct-key-attestations",
+              "vct": "urn:eu.europa.ec.eudi:pid:1"
+            },
+            {
+              "cryptographic_binding_methods_supported": [
+                "jwk"
+              ],
+              "cryptographic_suites_supported": [
+                "ES256"
+              ],
+              "display": [
+                {
+                  "background_color": "#F1F2F0",
+                  "locale": "en",
+                  "logo": {
+                    "url": "https://funke.animo.id/assets/issuers/bdr/pid-credential.png"
+                  },
+                  "name": "PID (ARF, urn: vct)",
+                  "text_color": "#2F3544"
+                }
+              ],
+              "format": "dc+sd-jwt",
+              "id": "arf-pid-sd-jwt-urn-vct-dc-sd-jwt",
+              "vct": "urn:eu.europa.ec.eudi:pid:1"
+            },
+            {
+              "cryptographic_binding_methods_supported": [
+                "jwk"
+              ],
+              "cryptographic_suites_supported": [
+                "ES256"
+              ],
+              "display": [
+                {
+                  "background_color": "#F1F2F0",
+                  "locale": "en",
+                  "logo": {
+                    "url": "https://funke.animo.id/assets/issuers/bdr/pid-credential.png"
+                  },
+                  "name": "PID (ARF, urn: vct)",
+                  "text_color": "#2F3544"
+                }
+              ],
+              "format": "dc+sd-jwt",
+              "id": "arf-pid-sd-jwt-urn-vct-dc-sd-jwt-key-attestations",
+              "vct": "urn:eu.europa.ec.eudi:pid:1"
+            }
+          ],
+          "display": [
+            {
+              "logo": {
+                "uri": "https://funke.animo.id/assets/issuers/bdr/issuer.png",
+                "url": "https://funke.animo.id/assets/issuers/bdr/issuer.png"
+              },
+              "name": "Bundesdruckerei"
+            }
+          ],
+          "dpop_signing_alg_values_supported": [
+            "ES256"
+          ],
+          "nonce_endpoint": "https://funke.animo.id/oid4vci/188e2459-6da8-4431-9062-2fcdac274f41/nonce",
+          "token_endpoint": "https://funke.animo.id/oid4vci/188e2459-6da8-4431-9062-2fcdac274f41/token"
+        }
+      }
+    ],
+    "presentation_results": []
+  },
+  "workflow_id": "Pipeline-paradym-get-pid-bundesdruckerei-e4353e7e-c259-44c6-a59b-395fba946ee0",
+  "run_id": "019e9815-dd77-790e-a8bd-98ed9f18c60f"
+}

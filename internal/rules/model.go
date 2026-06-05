@@ -5,11 +5,12 @@ type Taxonomy struct {
 	NormalizationRules map[string]any `yaml:"normalization_rules"`
 }
 type Rule struct {
-	RuleID     string    `yaml:"rule_id"`
-	TestID     int       `yaml:"test_id"`
-	ResultText string    `yaml:"result_text"`
-	Strength   string    `yaml:"strength"`
-	When       Condition `yaml:"when"`
+	RuleID       string    `yaml:"rule_id"`
+	TestID       int       `yaml:"test_id"`
+	ResultText   string    `yaml:"result_text"`
+	ResultStatus string    `yaml:"result_status"`
+	Strength     string    `yaml:"strength"`
+	When         Condition `yaml:"when"`
 }
 type Condition struct {
 	All          []Condition `yaml:"all"`
@@ -31,4 +32,5 @@ type Result struct {
 	Text     string
 	RuleID   string
 	Strength string
+	Status   string
 }
