@@ -64,6 +64,6 @@ Humans can understand the emitted tests through the flat test list
 
 ## Reference mapping hygiene
 
-In the human-readable flat test list, `Pending reference review` means that the test is retained as a useful EUDI conformance/interoperability candidate, but its exact normative reference, clause, article, or official profile mapping has not yet been reviewed and approved.
+In the human-readable flat test list, `Pending reference review` means that the test is retained as a useful EUDI conformance/interoperability candidate, but its exact normative reference, clause, article, or official profile mapping has not yet been reviewed and approved. Pending rows still identify the source family or implementation family that made the test relevant, such as OpenID Foundation, WE BUILD, fake issuer/verifier fixtures, Maestro black-box Wallet automation, trust-helper, CAB/QTSP evidence, or ETSI helper/profile work.
 
 The previous internal guardrail wording has been removed from the generated Markdown projection. The guardrail remains a governance rule for generators: do not invent new source mappings; only map tests to existing uploaded or official sources after review.
