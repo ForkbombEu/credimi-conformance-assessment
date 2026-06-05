@@ -18,18 +18,21 @@ func Render(af facts.AssessmentFacts, tests []sot.FlatTest, results map[int]rule
 	}
 	var b bytes.Buffer
 	fmt.Fprintf(&b, "# Credimi Conformance Assessment — %s\n\n", af.Fixture.Name)
+	passedIDs, failedIDs := splitResultIDs(results)
 	b.WriteString("## Passed tests digest\n\n")
-	b.WriteString("| # | Actor | Test | Test result |\n|---:|---|---|---|\n")
-	ids := make([]int, 0, len(results))
-	for id := range results {
-		ids = append(ids, id)
-	}
-	sort.Ints(ids)
-	for _, id := range ids {
+	b.WriteString("| # | Actor | Test | Test result |\n|---|---|---|---|\n")
+	for _, id := range passedIDs {
 		t := byID[id]
-		fmt.Fprintf(&b, "| %d | %s | %s | %s |\n", id, esc(t.Actor), esc(t.Test), esc(results[id].Text))
+		fmt.Fprintf(&b, "| %s | %s | %s | %s |\n", t.ID, esc(t.Actor), esc(t.Test), esc(results[id].Text))
 	}
-	fmt.Fprintf(&b, "\n**Passed tests count:** %d\n\n", len(ids))
+	fmt.Fprintf(&b, "\n**Passed tests count:** %d\n\n", len(passedIDs))
+	b.WriteString("## Failed tests digest\n\n")
+	b.WriteString("| # | Actor | Test | Test result |\n|---|---|---|---|\n")
+	for _, id := range failedIDs {
+		t := byID[id]
+		fmt.Fprintf(&b, "| %s | %s | %s | %s |\n", t.ID, esc(t.Actor), esc(t.Test), esc(results[id].Text))
+	}
+	fmt.Fprintf(&b, "\n**Failed tests count:** %d\n\n", len(failedIDs))
 	b.WriteString("## Assessment summary\n\n")
 	b.WriteString("This deterministic assessment was generated from the fixture Temporal input/output, extracted artifacts, the Credimi source-of-truth flat conformance list, and declarative taxonomy assessment rules. It is not an official certification result.\n\n")
 	fmt.Fprintf(&b, "- Fixture: `%s`\n- Temporal input present: `%t`\n- Temporal output present: `%t`\n- Credential-offer artifacts: `%d`\n- Presentation-request artifacts: `%d`\n- Issuer metadata fetched: `%t`\n\n", af.Fixture.Name, af.Workflow.TemporalInputPresent, af.Workflow.TemporalOutputPresent, len(af.CredentialOffers), len(af.Presentations), af.Issuer.MetadataFetched)
@@ -48,12 +51,27 @@ func Render(af facts.AssessmentFacts, tests []sot.FlatTest, results map[int]rule
 	b.WriteString("| Evidence | Present |\n|---|---:|\n")
 	fmt.Fprintf(&b, "| Temporal input.json | %t |\n| Temporal output.json | %t |\n| Discovered step artifacts | %t |\n| Extraction summary | %t |\n| Hashed JSON artifacts | %t |\n\n", af.Workflow.TemporalInputPresent, af.Workflow.TemporalOutputPresent, af.Evidence.StepArtifactsPresent, af.Evidence.ExtractionSummaryPresent, af.Evidence.ArtifactsHashed)
 	b.WriteString("## Assessment table\n\n")
-	b.WriteString("Blank **Test result** cells mean the fixture did not execute or did not sufficiently prove that test. **HITM** is intentionally left empty for human review notes.\n\n")
-	b.WriteString("| # | Actor | Test | Test result | HITM | Evidence strength | Recommended execution | Standards / source references | Notes |\n|---:|---|---|---|---|---|---|---|---|\n")
+	b.WriteString("Blank **Test result** cells mean the fixture did not execute or did not sufficiently prove that test. Failed cells mean the fixture exercised the test and the observed consumer action failed.\n\n")
+	b.WriteString("| # | Actor | Test | Test result | Evidence strength | Recommended execution | Standards / source references | Notes |\n|---|---|---|---|---|---|---|---|\n")
 	for _, t := range tests {
 		rr := results[t.Number].Text
-		fmt.Fprintf(&b, "| %d | %s | %s | %s |  | %s | %s | %s | %s |\n", t.Number, esc(t.Actor), esc(t.Test), esc(rr), esc(t.EvidenceStrength), esc(t.RecommendedExecution), esc(t.SourceReferences), esc(t.Notes))
+		fmt.Fprintf(&b, "| %s | %s | %s | %s | %s | %s | %s | %s |\n", t.ID, esc(t.Actor), esc(t.Test), esc(rr), esc(t.EvidenceStrength), esc(t.RecommendedExecution), esc(t.SourceReferences), esc(t.Notes))
 	}
 	return b.String()
 }
 func esc(s string) string { return strings.ReplaceAll(s, "\n", " ") }
+
+func splitResultIDs(results map[int]rules.Result) ([]int, []int) {
+	var passed []int
+	var failed []int
+	for id, result := range results {
+		if result.Status == "failed" {
+			failed = append(failed, id)
+		} else {
+			passed = append(passed, id)
+		}
+	}
+	sort.Ints(passed)
+	sort.Ints(failed)
+	return passed, failed
+}

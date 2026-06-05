@@ -47,6 +47,8 @@ func ParseTaxonomy(b []byte) Taxonomy {
 			cur.TestID, _ = strconv.Atoi(strings.TrimSpace(after(trimmed, "test_id:")))
 		case strings.HasPrefix(trimmed, "result_text:"):
 			cur.ResultText = unquote(after(trimmed, "result_text:"))
+		case strings.HasPrefix(trimmed, "result_status:"):
+			cur.ResultStatus = unquote(after(trimmed, "result_status:"))
 		case strings.HasPrefix(trimmed, "strength:"):
 			cur.Strength = unquote(after(trimmed, "strength:"))
 		case strings.HasPrefix(trimmed, "equals:"):
@@ -55,6 +57,12 @@ func ParseTaxonomy(b []byte) Taxonomy {
 				cur.When.All = append(cur.When.All, Condition{})
 			}
 			cur.When.All[len(cur.When.All)-1].Equals = val
+		case strings.HasPrefix(trimmed, "gte:"):
+			val := unquote(after(trimmed, "gte:"))
+			if len(cur.When.All) == 0 || cur.When.All[len(cur.When.All)-1].GTE != nil {
+				cur.When.All = append(cur.When.All, Condition{})
+			}
+			cur.When.All[len(cur.When.All)-1].GTE = val
 		case strings.HasPrefix(trimmed, "exists:"):
 			val := unquote(after(trimmed, "exists:")) == "true"
 			if len(cur.When.All) == 0 || cur.When.All[len(cur.When.All)-1].Exists != nil {

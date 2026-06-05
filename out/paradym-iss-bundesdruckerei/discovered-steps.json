@@ -1,0 +1,71 @@
+[
+  {
+    "id": "install-from-playstore-0001",
+    "use": "mobile-external-install",
+    "with": {
+      "config": {
+        "app_url": "https://credimi.io/",
+        "taskqueue": "forkbomb-bv-andrea/pixel6-android16-a1-TaskQueue"
+      },
+      "payload": {
+        "action_code": "appId: com.android.vending\n---\n- openLink: \"market://details?id=id.paradym.wallet\"\n- assertVisible: Install\n- tapOn: Install\n- tapOn: Open\n#",
+        "action_id": "findynet-cooperative/paradym-wallet/install-from-playstore",
+        "runner_id": "forkbomb-bv-andrea/pixel6-android16-a1",
+        "serial": "1B171FDF6008G7",
+        "stored_action_code": true,
+        "type": "android_phone",
+        "version_id": "installed_from_external_source"
+      }
+    },
+    "metadata": {
+      "mobile_special_install": true
+    }
+  },
+  {
+    "id": "onboarding-0002",
+    "use": "mobile-automation",
+    "with": {
+      "config": {
+        "app_url": "https://credimi.io/",
+        "taskqueue": "forkbomb-bv-andrea/pixel6-android16-a1-TaskQueue"
+      },
+      "payload": {
+        "action_code": "appId: id.paradym.wallet\n---\n- launchApp:\n    clearState: true\n- tapOn: Get Started\n- tapOn: \"1\"\n- tapOn: \"2\"\n- tapOn: \"3\"\n- tapOn: \"4\"\n- tapOn: \"5\"\n- tapOn: \"6\"\n- tapOn: \"1\"\n- tapOn: \"2\"\n- tapOn: \"3\"\n- tapOn: \"4\"\n- tapOn: \"5\"\n- tapOn: \"6\"\n- tapOn: Set up later\n- tapOn: Go to wallet\n",
+        "action_id": "findynet-cooperative/paradym-wallet/onboarding",
+        "runner_id": "forkbomb-bv-andrea/pixel6-android16-a1",
+        "serial": "1B171FDF6008G7",
+        "stored_action_code": true,
+        "type": "android_phone",
+        "version_id": "installed_from_external_source"
+      }
+    }
+  },
+  {
+    "id": "animo-bundesdruckerei-pid-issuer-0003",
+    "use": "credential-offer",
+    "with": {
+      "payload": {
+        "credential_id": "forkbomb-bv-andrea/misc-issuer-integration-demo/animo-bundesdruckerei-pid-issuer"
+      }
+    }
+  },
+  {
+    "id": "get-bundesdruckerei-pid-0004",
+    "use": "mobile-automation",
+    "with": {
+      "config": {
+        "app_url": "https://credimi.io/",
+        "taskqueue": "forkbomb-bv-andrea/pixel6-android16-a1-TaskQueue"
+      },
+      "payload": {
+        "action_code": "appId: id.paradym.wallet\n---\n- launchApp\n- tapOn: \"1\"\n- tapOn: \"2\"\n- tapOn: \"3\"\n- tapOn: \"4\"\n- tapOn: \"5\"\n- tapOn: \"6\"\n## In general the Wallet seems not handle redirects well, at least not on Android\n## We resorted to letting click the deeplink in the browser directly\n## Below all the failed experiments:\n# Bundesdruckerei and Paradym issuer return a 404, maybe because the credential offer can be used only once\n# - openLink: https://credimi.io/api/credential/deeplink?id=forkbomb-bv-andrea/misc-issuer-integration-demo/findynet-paradym-test-issuer&redirect=true\n# - openLink: https://credimi.io/api/credential/deeplink?id=forkbomb-bv-andrea/misc-issuer-integration-demo/animo-bundesdruckerei-pid-issuer&redirect=true\n# Sphereon is broken also by scanning\n# - openLink: https://credimi.io/api/credential/deeplink?id=forkbomb-bv-andrea/misc-issuer-integration-demo/findynet-sphereon-issuer&redirect=true\n# EUDIW links do not redirect, presumably because Paradym has not registered haip-vci://\n#- openLink: https://credimi.io/api/credential/deeplink?id=forkbomb-bv-andrea/misc-issuer-integration-demo/eudiw-pid-mdoc-haip-vci&redirect=true\n#- openLink: https://credimi.io/api/credential/deeplink?id=forkbomb-bv-andrea/misc-issuer-integration-demo/eudiw-pid-pid-vc-sd-jwt-haip-vci&redirect=true\n- openLink: https://credimi.io/marketplace/credentials/forkbomb-bv-andrea/misc-issuer-integration-demo/animo-bundesdruckerei-pid-issuer#qr_code\n- tapOn:\n    text: \"openid-credential-offer://\\\\?credential_offer_uri=.*\"\n- runFlow:\n    when:\n      visible: \"1\"\n    commands:\n      - tapOn: \"1\"\n      - tapOn: \"2\"\n      - tapOn: \"3\"\n      - tapOn: \"4\"\n      - tapOn: \"5\"\n      - tapOn: \"6\"\n- tapOn: Yes, continue\n- tapOn: Continue\n- tapOn: Accept\n \n ",
+        "action_id": "findynet-cooperative/paradym-wallet/get-bundesdruckerei-pid",
+        "runner_id": "forkbomb-bv-andrea/pixel6-android16-a1",
+        "serial": "1B171FDF6008G7",
+        "stored_action_code": true,
+        "type": "android_phone",
+        "version_id": "installed_from_external_source"
+      }
+    }
+  }
+]

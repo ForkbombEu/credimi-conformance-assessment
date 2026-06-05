@@ -79,4 +79,40 @@ func TestGeneratedAssessmentUsesRealtimeEvidenceNotFixtureSlug(t *testing.T) {
 			t.Fatalf("report missing %q", want)
 		}
 	}
+	if strings.Contains(withEvidence.Reports[0].Markdown, "HITM") {
+		t.Fatalf("report should not contain HITM column")
+	}
+	for _, want := range []string{
+		"| CR-W-001 | Wallet | Wallet can receive a PID credential offer |",
+		"| CR-I-065 | Issuer | Issuer exposes OpenID Credential Issuer metadata |",
+	} {
+		if !strings.Contains(withEvidence.Reports[0].Markdown, want) {
+			t.Fatalf("report should render categorized CR display ID row %q", want)
+		}
+	}
+}
+
+func TestGeneratedFailureAssessmentUsesCRIDsAndNoHITM(t *testing.T) {
+	res, err := conformance.Generate(
+		conformance.ReportInput{Fixture: "Paradym-iss-BundesDruckerei"},
+		conformance.ReportOptions{SourceDir: "../../source-of-truth", FixturesDir: "../../fixtures", ExtractedDir: "../../out"},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(res.Reports) != 1 {
+		t.Fatalf("report count got %d want 1", len(res.Reports))
+	}
+	md := res.Reports[0].Markdown
+	if strings.Contains(md, "HITM") {
+		t.Fatalf("report should not contain HITM column")
+	}
+	for _, want := range []string{
+		"| CR-W-001 | Wallet | Wallet can receive a PID credential offer | FAILED -",
+		"| CR-I-080 | Issuer | Issuer can issue PID to a real Wallet | FAILED -",
+	} {
+		if !strings.Contains(md, want) {
+			t.Fatalf("failure report should render categorized CR display ID row %q", want)
+		}
+	}
 }
