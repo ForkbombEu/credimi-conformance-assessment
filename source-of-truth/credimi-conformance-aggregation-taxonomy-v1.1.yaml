@@ -2836,6 +2836,14 @@ assessment_rules:
       all:
         - fact: credential_offer.exists
           equals: true
+  - rule_id: realtime-offer-issuer-matches-metadata
+    test_id: 75
+    result_text: "PASSED - real-time credential offer issuer URL matched supplied issuer metadata issuer"
+    strength: definitive
+    when:
+      all:
+        - fact: issuer.offer_url_matches_metadata_issuer
+          equals: true
   - rule_id: realtime-offered-config-in-metadata
     test_id: 76
     result_text: "PASSED - real-time offered credential configuration ID was found in supplied issuer metadata"
@@ -2894,6 +2902,14 @@ assessment_rules:
       all:
         - fact: presentation.response_type
           equals: vp_token
+  - rule_id: realtime-verifier-requested-attributes
+    test_id: 107
+    result_text: "PASSED - real-time presentation request DCQL declared requested attributes"
+    strength: definitive
+    when:
+      all:
+        - fact: presentation.dcql_claim_path_count
+          gte: 1
   - rule_id: realtime-verifier-client-id
     test_id: 108
     result_text: "PASSED - real-time presentation request included client_id"
@@ -2943,4 +2959,12 @@ assessment_rules:
     when:
       all:
         - fact: evidence.artifacts_hashed
+          equals: true
+  - rule_id: realtime-webuild-wallet-conformance
+    test_id: 162
+    result_text: "PASSED - real-time WE BUILD Wallet conformance-check flows generated offers and completed Wallet automation"
+    strength: definitive
+    when:
+      all:
+        - fact: conformance.webuild_wallet_checks_completed
           equals: true

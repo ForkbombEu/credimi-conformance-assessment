@@ -108,3 +108,25 @@ func TestGenerateUsesEmbeddedSourceByDefault(t *testing.T) {
 		t.Fatal("markdown should be generated from embedded source")
 	}
 }
+func TestGenerateUsesLegacyFixtureAndExtractedDirs(t *testing.T) {
+	res, err := Generate(
+		ReportInput{Fixture: "EUDI-iss-ver"},
+		ReportOptions{
+			SourceDir:    "../../source-of-truth",
+			FixturesDir:  "../../fixtures",
+			ExtractedDir: "../../out",
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(res.Reports) != 1 {
+		t.Fatalf("reports count got %d want 1", len(res.Reports))
+	}
+	if res.Reports[0].Slug != "eudi-iss-ver" {
+		t.Fatalf("slug got %q", res.Reports[0].Slug)
+	}
+	if !strings.Contains(res.Reports[0].Markdown, "PASSED - real-time presentation request DCQL declared requested attributes") {
+		t.Fatalf("legacy fixture generation did not use extracted presentation evidence")
+	}
+}

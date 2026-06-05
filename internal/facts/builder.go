@@ -88,9 +88,10 @@ func applyTemporalInput(af *AssessmentFacts, b []byte) {
 	if af.Workflow.Name == "" {
 		af.Workflow.Name = firstJSONString(s, "workflowDefinitionName")
 	}
-	if strings.Contains(strings.ToLower(s), "android") || strings.Contains(strings.ToLower(s), "pixel") {
+	if strings.Contains(strings.ToLower(s), "pixel") {
 		af.Wallet.RanOnPhysicalAndroid = true
 	}
+	extractConformanceInputFacts(af, s)
 }
 func applyTemporalOutput(af *AssessmentFacts, b []byte) {
 	af.Workflow.TemporalOutputPresent = true
@@ -193,12 +194,20 @@ func hasJSON(b []byte) bool {
 func finalize(af *AssessmentFacts) {
 	for i := range af.CredentialOffers {
 		co := &af.CredentialOffers[i]
-		if co.ConfigurationID != "" && stringIn(co.ConfigurationID, af.Issuer.ConfigurationIDs) {
+		if co.IssuerURL != "" && af.Issuer.IssuerURL != "" && co.IssuerURL == af.Issuer.IssuerURL {
+			af.Issuer.OfferIssuerMatchesMetadataIssuer = true
+		}
+		if cfg, ok := selectedCredentialConfiguration(*co, af.Issuer.Configurations); ok {
+			af.Issuer.OfferedConfigurationPresent = true
+			co.Format = firstNonEmpty(co.Format, cfg.Format)
+			co.VCT = firstNonEmpty(co.VCT, cfg.VCT)
+			co.Doctype = firstNonEmpty(co.Doctype, cfg.Doctype)
+			co.IsPID = co.IsPID || cfg.IsPID
+			co.IsSDJWT = co.IsSDJWT || cfg.IsSDJWT
+			co.IsMdoc = co.IsMdoc || cfg.IsMdoc
+		} else if co.ConfigurationID != "" && stringIn(co.ConfigurationID, af.Issuer.ConfigurationIDs) {
 			af.Issuer.OfferedConfigurationPresent = true
 		}
-		co.IsPID = co.IsPID || af.Issuer.MetadataAdvertisesPID
-		co.IsSDJWT = co.IsSDJWT || af.Issuer.MetadataAdvertisesSDJWT
-		co.IsMdoc = co.IsMdoc || af.Issuer.MetadataAdvertisesMdoc
 	}
 	if len(af.CredentialOffers) > 0 {
 		af.Wallet.IssuanceFlowCompleted = af.Workflow.TemporalOutputPresent && af.Workflow.HasCompletedSteps && af.Wallet.NoVisibleError
@@ -208,6 +217,22 @@ func finalize(af *AssessmentFacts) {
 		af.Wallet.PresentationShareCompleted = af.Wallet.PresentationFlowCompleted
 	}
 }
+func selectedCredentialConfiguration(co CredentialOfferFacts, configs []CredentialConfigurationFacts) (CredentialConfigurationFacts, bool) {
+	for _, cfg := range configs {
+		if cfg.ID == co.ConfigurationID {
+			return cfg, true
+		}
+	}
+	return CredentialConfigurationFacts{}, false
+}
+
+func firstNonEmpty(a, b string) string {
+	if a != "" {
+		return a
+	}
+	return b
+}
+
 func markHashed(af *AssessmentFacts, b []byte) {
 	h := sha256.Sum256(b)
 	_ = hex.EncodeToString(h[:])
@@ -233,10 +258,28 @@ func extractOutputFacts(af *AssessmentFacts, b []byte) {
 	af.Workflow.HasScreenshotsOrVideos = strings.Contains(ls, "screenshot") || strings.Contains(ls, "video")
 	af.Workflow.WorkflowID = firstJSONString(s, "workflow_id", "workflow-id", "workflowId")
 	af.Workflow.RunID = firstJSONString(s, "run_id", "workflow-run-id", "workflowRunId")
-	if strings.Contains(strings.ToLower(s), "android") || strings.Contains(strings.ToLower(s), "pixel") {
+	if strings.Contains(strings.ToLower(s), "pixel") {
 		af.Wallet.RanOnPhysicalAndroid = true
 	}
+	extractConformanceOutputFacts(af, s)
 }
+func extractConformanceInputFacts(af *AssessmentFacts, s string) {
+	if strings.Contains(s, "conformance-check") && strings.Contains(s, "WEBUILD-") {
+		af.Conformance.WEBuildWalletCheckCount = strings.Count(s, "\"use\":\"conformance-check\"")
+	}
+}
+
+func extractConformanceOutputFacts(af *AssessmentFacts, s string) {
+	if af.Conformance.WEBuildWalletCheckCount == 0 {
+		return
+	}
+	deeplinkCount := strings.Count(s, "credential_offer_uri=")
+	completedWalletFlows := strings.Count(s, "Oups! Something went wrong")
+	if deeplinkCount >= af.Conformance.WEBuildWalletCheckCount && completedWalletFlows >= af.Conformance.WEBuildWalletCheckCount {
+		af.Conformance.WEBuildWalletChecksCompleted = true
+	}
+}
+
 func firstJSONString(s string, keys ...string) string {
 	for _, key := range keys {
 		if value := findJSONString(s, key); value != "" {
@@ -306,8 +349,18 @@ func readWellKnownBytes(b []byte) IssuerFacts {
 	if strings.Count(trimmed, ".") >= 2 && !strings.HasPrefix(trimmed, "{") {
 		is.MetadataFormat = "JWT"
 	}
+	root := asMap(parseJSON(b))
+	metadata := root
+	if payload := asMap(root["payload"]); len(payload) > 0 {
+		if _, ok := payload["credential_configurations_supported"]; ok || stringValue(payload, "credential_issuer", "issuer", "iss", "sub") != "" {
+			metadata = payload
+		}
+	}
 	ls := strings.ToLower(analysis)
-	is.IssuerURL = firstJSONString(analysis, "credential_issuer", "issuer", "iss")
+	is.IssuerURL = stringValue(metadata, "credential_issuer", "issuer", "iss", "sub")
+	if is.IssuerURL == "" {
+		is.IssuerURL = firstJSONString(analysis, "credential_issuer", "issuer", "iss", "sub")
+	}
 	is.MetadataAdvertisesSDJWT = strings.Contains(ls, "dc+sd-jwt") || strings.Contains(ls, "vc+sd-jwt") || strings.Contains(ls, "sd-jwt")
 	is.MetadataAdvertisesMdoc = strings.Contains(ls, "mso_mdoc") || strings.Contains(ls, "mdoc")
 	is.MetadataAdvertisesPID = strings.Contains(ls, "pid") || strings.Contains(ls, "person identification")
@@ -319,9 +372,33 @@ func readWellKnownBytes(b []byte) IssuerFacts {
 			is.MetadataAdvertisesSigningAlgorithms = append(is.MetadataAdvertisesSigningAlgorithms, alg)
 		}
 	}
-	is.ConfigurationIDs = appendUnique(nil, mapKeys(asMap(asMap(parseJSON(b))["credential_configurations_supported"]))...)
+	is.Configurations = readCredentialConfigurations(asMap(metadata["credential_configurations_supported"]))
+	for _, cfg := range is.Configurations {
+		is.ConfigurationIDs = appendUnique(is.ConfigurationIDs, cfg.ID)
+	}
 	return is
 }
+
+func readCredentialConfigurations(configs map[string]any) []CredentialConfigurationFacts {
+	out := make([]CredentialConfigurationFacts, 0, len(configs))
+	for id, raw := range configs {
+		m := asMap(raw)
+		cfg := CredentialConfigurationFacts{
+			ID:      id,
+			Format:  stringValue(m, "format"),
+			VCT:     stringValue(m, "vct"),
+			Doctype: stringValue(m, "doctype"),
+		}
+		b, _ := json.Marshal(raw)
+		ls := strings.ToLower(id + " " + cfg.Format + " " + cfg.VCT + " " + cfg.Doctype + " " + string(b))
+		cfg.IsPID = strings.Contains(ls, "pid") || strings.Contains(ls, "person identification")
+		cfg.IsSDJWT = strings.Contains(ls, "sd-jwt") || strings.Contains(ls, "dc+sd-jwt") || strings.Contains(ls, "vc+sd-jwt")
+		cfg.IsMdoc = strings.Contains(ls, "mso_mdoc") || strings.Contains(ls, "mdoc")
+		out = append(out, cfg)
+	}
+	return out
+}
+
 func mergeIssuer(af *AssessmentFacts, is IssuerFacts) {
 	af.Issuer.MetadataFetched = af.Issuer.MetadataFetched || is.MetadataFetched
 	if is.MetadataFormat != "" {
@@ -337,6 +414,7 @@ func mergeIssuer(af *AssessmentFacts, is IssuerFacts) {
 	af.Issuer.MetadataAdvertisesDIDBinding = af.Issuer.MetadataAdvertisesDIDBinding || is.MetadataAdvertisesDIDBinding
 	af.Issuer.MetadataHasX5C = af.Issuer.MetadataHasX5C || is.MetadataHasX5C
 	af.Issuer.ConfigurationIDs = appendUnique(af.Issuer.ConfigurationIDs, is.ConfigurationIDs...)
+	af.Issuer.Configurations = appendUniqueConfigurations(af.Issuer.Configurations, is.Configurations...)
 	af.Issuer.MetadataAdvertisesSigningAlgorithms = appendUnique(af.Issuer.MetadataAdvertisesSigningAlgorithms, is.MetadataAdvertisesSigningAlgorithms...)
 }
 func readPresentation(path string) PresentationFacts {
@@ -355,8 +433,52 @@ func readPresentationBytes(b []byte) PresentationFacts {
 	p.ResponseMode = firstJSONString(analysis, "response_mode")
 	p.ClientID = firstJSONString(analysis, "client_id")
 	p.ClientIDScheme = firstJSONString(analysis, "client_id_scheme")
+	root := asMap(parseJSON(b))
+	if payload := asMap(root["payload"]); len(payload) > 0 {
+		p.ResponseType = firstNonEmpty(p.ResponseType, stringValue(payload, "response_type"))
+		p.ResponseMode = firstNonEmpty(p.ResponseMode, stringValue(payload, "response_mode"))
+		p.ClientID = firstNonEmpty(p.ClientID, stringValue(payload, "client_id"))
+		p.ClientIDScheme = firstNonEmpty(p.ClientIDScheme, stringValue(payload, "client_id_scheme"))
+		collectDCQL(&p, asMap(payload["dcql_query"]))
+	} else {
+		collectDCQL(&p, asMap(root["dcql_query"]))
+	}
 	return p
 }
+
+func collectDCQL(p *PresentationFacts, dcql map[string]any) {
+	credentials, _ := dcql["credentials"].([]any)
+	for _, rawCredential := range credentials {
+		credential := asMap(rawCredential)
+		if format := stringValue(credential, "format"); format != "" {
+			p.DCQLFormats = appendUnique(p.DCQLFormats, format)
+		}
+		meta := asMap(credential["meta"])
+		for _, v := range anySlice(meta["vct_values"]) {
+			if s := toString(v); s != "" {
+				p.VCTValues = appendUnique(p.VCTValues, s)
+			}
+		}
+		for _, rawClaim := range anySlice(credential["claims"]) {
+			claim := asMap(rawClaim)
+			var parts []string
+			for _, part := range anySlice(claim["path"]) {
+				if s := toString(part); s != "" {
+					parts = append(parts, s)
+				}
+			}
+			if len(parts) > 0 {
+				p.ClaimPaths = appendUnique(p.ClaimPaths, strings.Join(parts, "."))
+			}
+		}
+	}
+}
+
+func anySlice(v any) []any {
+	items, _ := v.([]any)
+	return items
+}
+
 func toString(v any) string {
 	switch x := v.(type) {
 	case string:
@@ -395,6 +517,20 @@ func decodedCompactJWT(s string) string {
 		}
 	}
 	return strings.Join(out, " ")
+}
+
+func appendUniqueConfigurations(a []CredentialConfigurationFacts, vals ...CredentialConfigurationFacts) []CredentialConfigurationFacts {
+	seen := map[string]bool{}
+	for _, cfg := range a {
+		seen[cfg.ID] = true
+	}
+	for _, cfg := range vals {
+		if !seen[cfg.ID] {
+			a = append(a, cfg)
+			seen[cfg.ID] = true
+		}
+	}
+	return a
 }
 
 func appendUnique(a []string, vals ...string) []string {
