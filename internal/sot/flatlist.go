@@ -52,7 +52,7 @@ func ParseFlatListReader(name string, r io.Reader) ([]FlatTest, error) {
 			return nil, fmt.Errorf("duplicate flat test number %d", n)
 		}
 		seen[n] = true
-		rows = append(rows, FlatTest{Number: n, ID: flatTestID(n), Actor: cells[1], Test: cells[2], EvidenceStrength: cells[3], RecommendedExecution: cells[4], SourceReferences: cells[5], Notes: cells[6]})
+		rows = append(rows, FlatTest{Number: n, ID: flatTestID(n, cells[1], cells[2]), Actor: cells[1], Test: cells[2], EvidenceStrength: cells[3], RecommendedExecution: cells[4], SourceReferences: cells[5], Notes: cells[6]})
 	}
 	if err := s.Err(); err != nil {
 		return nil, err
@@ -63,8 +63,35 @@ func ParseFlatListReader(name string, r io.Reader) ([]FlatTest, error) {
 	return rows, nil
 }
 
-func flatTestID(number int) string {
-	return fmt.Sprintf("CR-I-%03d", number)
+func flatTestID(number int, actor string, test string) string {
+	return fmt.Sprintf("%s-%03d", flatTestPrefix(actor, test), number)
+}
+
+func flatTestPrefix(actor string, test string) string {
+	switch strings.ToLower(strings.TrimSpace(actor)) {
+	case "wallet":
+		return "CR-W"
+	case "issuer":
+		return "CR-I"
+	case "verifier/rp", "verifier/reader":
+		return "CR-V"
+	case "trust infrastructure":
+		return trustInfrastructurePrefix(test)
+	case "external/conformance":
+		return "CR-CON"
+	default:
+		return "CR-MIS"
+	}
+}
+
+func trustInfrastructurePrefix(test string) string {
+	normalized := strings.ToLower(test)
+	for _, marker := range []string{"lotl", "trusted list", "trust anchor", "certificate", "revocation", "status", "openid federation"} {
+		if strings.Contains(normalized, marker) {
+			return "CR-TRU"
+		}
+	}
+	return "CR-INF"
 }
 
 func splitMarkdownRow(line string) []string {
