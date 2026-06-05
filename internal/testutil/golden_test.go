@@ -79,4 +79,10 @@ func TestGeneratedAssessmentUsesRealtimeEvidenceNotFixtureSlug(t *testing.T) {
 			t.Fatalf("report missing %q", want)
 		}
 	}
+	if strings.Contains(withEvidence.Reports[0].Markdown, "HITM") {
+		t.Fatalf("report should not contain HITM column")
+	}
+	if !strings.Contains(withEvidence.Reports[0].Markdown, "| CR-W-001 | Wallet | Wallet can receive a PID credential offer |") {
+		t.Fatalf("report should render categorized CR display IDs in the # column")
+	}
 }

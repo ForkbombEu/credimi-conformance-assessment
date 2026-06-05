@@ -19,7 +19,7 @@ func Render(af facts.AssessmentFacts, tests []sot.FlatTest, results map[int]rule
 	var b bytes.Buffer
 	fmt.Fprintf(&b, "# Credimi Conformance Assessment — %s\n\n", af.Fixture.Name)
 	b.WriteString("## Passed tests digest\n\n")
-	b.WriteString("| # | Actor | Test | Test result |\n|---:|---|---|---|\n")
+	b.WriteString("| # | Actor | Test | Test result |\n|---|---|---|---|\n")
 	ids := make([]int, 0, len(results))
 	for id := range results {
 		ids = append(ids, id)
@@ -27,7 +27,7 @@ func Render(af facts.AssessmentFacts, tests []sot.FlatTest, results map[int]rule
 	sort.Ints(ids)
 	for _, id := range ids {
 		t := byID[id]
-		fmt.Fprintf(&b, "| %d | %s | %s | %s |\n", id, esc(t.Actor), esc(t.Test), esc(results[id].Text))
+		fmt.Fprintf(&b, "| %s | %s | %s | %s |\n", t.ID, esc(t.Actor), esc(t.Test), esc(results[id].Text))
 	}
 	fmt.Fprintf(&b, "\n**Passed tests count:** %d\n\n", len(ids))
 	b.WriteString("## Assessment summary\n\n")
@@ -48,11 +48,11 @@ func Render(af facts.AssessmentFacts, tests []sot.FlatTest, results map[int]rule
 	b.WriteString("| Evidence | Present |\n|---|---:|\n")
 	fmt.Fprintf(&b, "| Temporal input.json | %t |\n| Temporal output.json | %t |\n| Discovered step artifacts | %t |\n| Extraction summary | %t |\n| Hashed JSON artifacts | %t |\n\n", af.Workflow.TemporalInputPresent, af.Workflow.TemporalOutputPresent, af.Evidence.StepArtifactsPresent, af.Evidence.ExtractionSummaryPresent, af.Evidence.ArtifactsHashed)
 	b.WriteString("## Assessment table\n\n")
-	b.WriteString("Blank **Test result** cells mean the fixture did not execute or did not sufficiently prove that test. **HITM** is intentionally left empty for human review notes.\n\n")
-	b.WriteString("| # | Actor | Test | Test result | HITM | Evidence strength | Recommended execution | Standards / source references | Notes |\n|---:|---|---|---|---|---|---|---|---|\n")
+	b.WriteString("Blank **Test result** cells mean the fixture did not execute or did not sufficiently prove that test.\n\n")
+	b.WriteString("| # | Actor | Test | Test result | Evidence strength | Recommended execution | Standards / source references | Notes |\n|---|---|---|---|---|---|---|---|\n")
 	for _, t := range tests {
 		rr := results[t.Number].Text
-		fmt.Fprintf(&b, "| %d | %s | %s | %s |  | %s | %s | %s | %s |\n", t.Number, esc(t.Actor), esc(t.Test), esc(rr), esc(t.EvidenceStrength), esc(t.RecommendedExecution), esc(t.SourceReferences), esc(t.Notes))
+		fmt.Fprintf(&b, "| %s | %s | %s | %s | %s | %s | %s | %s |\n", t.ID, esc(t.Actor), esc(t.Test), esc(rr), esc(t.EvidenceStrength), esc(t.RecommendedExecution), esc(t.SourceReferences), esc(t.Notes))
 	}
 	return b.String()
 }
