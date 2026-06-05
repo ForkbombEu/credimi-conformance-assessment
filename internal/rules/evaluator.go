@@ -61,6 +61,8 @@ func FlattenFacts(af facts.AssessmentFacts) map[string]any {
 		m["presentation.response_type"] = p.ResponseType
 		m["presentation.response_mode"] = p.ResponseMode
 		m["presentation.client_id"] = p.ClientID
+		m["presentation.dcql_claim_paths"] = p.ClaimPaths
+		m["presentation.dcql_claim_path_count"] = len(p.ClaimPaths)
 	}
 	m["wallet.issuance_flow_completed"] = af.Wallet.IssuanceFlowCompleted
 	m["wallet.presentation_flow_completed"] = af.Wallet.PresentationFlowCompleted
@@ -77,9 +79,12 @@ func FlattenFacts(af facts.AssessmentFacts) map[string]any {
 	m["issuer.metadata_advertises_eddsa"] = contains(af.Issuer.MetadataAdvertisesSigningAlgorithms, "EdDSA")
 	m["issuer.metadata_advertises_rs256"] = contains(af.Issuer.MetadataAdvertisesSigningAlgorithms, "RS256")
 	m["issuer.metadata_has_x5c"] = af.Issuer.MetadataHasX5C
+	m["issuer.offer_url_matches_metadata_issuer"] = af.Issuer.OfferIssuerMatchesMetadataIssuer
 	m["issuer.offered_configuration_present"] = af.Issuer.OfferedConfigurationPresent
 	m["issuer.metadata_advertises_jwk_binding"] = af.Issuer.MetadataAdvertisesJWKBinding
 	m["issuer.metadata_advertises_did_binding"] = af.Issuer.MetadataAdvertisesDIDBinding
+	m["conformance.webuild_wallet_checks_completed"] = af.Conformance.WEBuildWalletChecksCompleted
+	m["conformance.webuild_wallet_check_count"] = af.Conformance.WEBuildWalletCheckCount
 	return m
 }
 func evalCond(c Condition, m map[string]any) bool {
