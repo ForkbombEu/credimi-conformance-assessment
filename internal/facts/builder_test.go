@@ -1,6 +1,8 @@
 package facts_test
 
 import (
+	"encoding/json"
+	"os"
 	"testing"
 
 	"github.com/forkbombeu/credimi-conformance-assessment/internal/facts"
@@ -66,6 +68,20 @@ func TestBuildMarksCompressedEmptyConsumerOutputAsFailed(t *testing.T) {
 	requirePassed(t, results, 74)
 }
 
+func TestBuildMarksMultipazSDJWTEmptyConsumerOutputAsFailed(t *testing.T) {
+	af, results := evaluateFixtureFacts(t, "multipaz-sd-jwt-fail")
+	if len(af.IssuanceAttempts) != 1 {
+		t.Fatalf("issuance attempts got %d want 1: %#v", len(af.IssuanceAttempts), af.IssuanceAttempts)
+	}
+	attempt := af.IssuanceAttempts[0]
+	if attempt.ConsumerStepID != "get-multipaz-pid-sd-jwt-urn-eudi-pid-1-lee-tom-0003" || attempt.ConsumerStatus != "failed" {
+		t.Fatalf("unexpected issuance attempt: %#v", attempt)
+	}
+	for _, id := range []int{1, 4, 6, 11, 14, 80} {
+		requireFailed(t, results, id)
+	}
+}
+
 func TestBuildLetsSuccessfulPresentationOverrideFailedGenericPresentation(t *testing.T) {
 	af, results := evaluateFixtureFacts(t, "EUDIW-fails-1-verification")
 	if len(af.IssuanceAttempts) != 2 {
@@ -91,6 +107,52 @@ func TestBuildLetsSuccessfulPresentationOverrideFailedGenericPresentation(t *tes
 	requirePassed(t, results, 29)
 	requirePassed(t, results, 30)
 	requirePassed(t, results, 37)
+}
+
+func TestBuildInlineReadsDirectPipelineOutputStepMap(t *testing.T) {
+	b, err := os.ReadFile("../../fixtures/multipaz-sd-jwt-fail/temporal-input-output.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var captured []struct {
+		Payload struct {
+			WorkflowDefinition json.RawMessage `json:"workflow_definition"`
+			PipelineOutput     json.RawMessage `json:"pipeline_output"`
+			Evidence           json.RawMessage `json:"evidence"`
+		} `json:"payload"`
+	}
+	if err := json.Unmarshal(b, &captured); err != nil {
+		t.Fatal(err)
+	}
+	if len(captured) != 1 {
+		t.Fatalf("captured payload count got %d want 1", len(captured))
+	}
+
+	af, err := facts.BuildInline(
+		"multipaz-sd-jwt-fail",
+		captured[0].Payload.WorkflowDefinition,
+		captured[0].Payload.PipelineOutput,
+		captured[0].Payload.Evidence,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(af.IssuanceAttempts) != 1 {
+		t.Fatalf("issuance attempts got %d want 1: %#v", len(af.IssuanceAttempts), af.IssuanceAttempts)
+	}
+	attempt := af.IssuanceAttempts[0]
+	if attempt.ConsumerStepID != "get-multipaz-pid-sd-jwt-urn-eudi-pid-1-lee-tom-0003" || attempt.ConsumerStatus != "failed" {
+		t.Fatalf("unexpected issuance attempt: %#v", attempt)
+	}
+
+	src, err := sot.Load("../../source-of-truth")
+	if err != nil {
+		t.Fatal(err)
+	}
+	results := rules.Evaluate(src.Taxonomy, af)
+	for _, id := range []int{1, 4, 6, 11, 14, 80} {
+		requireFailed(t, results, id)
+	}
 }
 
 func evaluateFixture(t *testing.T, name string) map[int]rules.Result {
