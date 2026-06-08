@@ -285,6 +285,8 @@ func applyPipelineOutput(af *AssessmentFacts, b []byte) {
 	}
 	if po := asMap(root["pipeline_output"]); len(po) > 0 {
 		applyPipelineOutputMap(af, po, "pipeline_output")
+	} else {
+		applyPipelineOutputMap(af, root, "pipeline_output")
 	}
 	failed := failureStepID(root)
 	if failed != "" {

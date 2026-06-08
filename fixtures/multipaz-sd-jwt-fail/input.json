@@ -1,0 +1,69 @@
+{
+  "name": "Multipaz: onboarding and get PID SD-JWT",
+  "runtime": {
+    "schedule": {},
+    "global_runner_id": "forkbomb-bv-andrea/pixel6-android16-a1",
+    "temporal": {
+      "activity_options": {
+        "schedule_to_close_timeout": "20m",
+        "start_to_close_timeout": "20m",
+        "retry_policy": {
+          "maximum_attempts": 3
+        }
+      }
+    }
+  },
+  "steps": [
+    {
+      "id": "onboarding-0001",
+      "use": "mobile-automation",
+      "with": {
+        "config": {
+          "app_url": "https://credimi.io/",
+          "taskqueue": "forkbomb-bv-andrea/pixel6-android16-a1-TaskQueue"
+        },
+        "payload": {
+          "action_code": "appId: org.multipaz.wallet.android\n---\n- launchApp:\n    clearState: true\n- tapOn: \"Get Started\"\n- tapOn: \"Continue\"\n- tapOn: \"More\"\n- tapOn: \"Accept\"\n- tapOn: \"Continue\"\n- tapOn: \"Use without an account\"\n- tapOn: \"Enable\"\n- tapOn: \"Skip\"\n- tapOn: \"Skip for now\"\n\n",
+          "action_id": "forkbomb-bv-andrea/multipaz/onboarding",
+          "runner_id": "forkbomb-bv-andrea/pixel6-android16-a1",
+          "serial": "1B171FDF6008G7",
+          "stored_action_code": true,
+          "type": "android_phone",
+          "version_id": "forkbomb-bv-andrea/multipaz/multipaz-wallet-2026-w20-1-14-git-696b373"
+        }
+      }
+    },
+    {
+      "id": "multipaz-pid-sd-jwt-urn-eudi-pid-1-0002",
+      "use": "credential-offer",
+      "with": {
+        "payload": {
+          "credential_id": "forkbomb-bv-andrea/misc-issuer-integration-demo/multipaz-pid-sd-jwt-urn-eudi-pid-1"
+        }
+      }
+    },
+    {
+      "id": "get-multipaz-pid-sd-jwt-urn-eudi-pid-1-lee-tom-0003",
+      "use": "mobile-automation",
+      "with": {
+        "config": {
+          "app_url": "https://credimi.io/",
+          "taskqueue": "forkbomb-bv-andrea/pixel6-android16-a1-TaskQueue"
+        },
+        "payload": {
+          "action_code": "appId: org.multipaz.wallet.android\n---\n- launchApp:\n    clearState: false\n# Use below for debugging\n- openLink: https://credimi.io/api/credential/deeplink?id=forkbomb-bv-andrea/misc-issuer-integration-demo/multipaz-pid-sd-jwt-urn-eudi-pid-1&redirect=true\n# - openLink: ${deeplink}\n- extendedWaitUntil:\n    visible: \"Continue\" \n    timeout: 60000   \n- tapOn: \"Continue\"\n- tapOn: \"[Not authenticated]\"\n- tapOn: \"Lee Tom\"\n- tapOn: \"Select\"\n- tapOn: \"Personal ID info\"\n- tapOn: \"Back\"\n\n",
+          "action_id": "forkbomb-bv-andrea/multipaz/get-multipaz-pid-sd-jwt-urn-eudi-pid-1-lee-tom",
+          "parameters": {
+            "deeplink": "openid-credential-offer://?credential_offer=%7B%22credential_issuer%22%3A%22https%3A%2F%2Fissuer.multipaz.org%2Fissuer%22%2C%22credential_configuration_ids%22%3A%5B%22pid_sd_jwt%22%5D%2C%22grants%22%3A%7B%22authorization_code%22%3A%7B%7D%7D%7D"
+          },
+          "runner_id": "forkbomb-bv-andrea/pixel6-android16-a1",
+          "serial": "1B171FDF6008G7",
+          "stored_action_code": true,
+          "type": "android_phone",
+          "version_id": "forkbomb-bv-andrea/multipaz/multipaz-wallet-2026-w20-1-14-git-696b373"
+        }
+      }
+    }
+  ],
+  "finally": {}
+}
